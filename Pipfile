@@ -1,0 +1,18 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+google-cloud-pubsub = "*"
+sdc-rabbit = "*"
+structlog = "*"
+
+[dev-packages]
+codecov = "*"
+coverage = "*"
+"flake8" = "*"
+pytest-cov = "*"
+
+[requires]
+python_version = "3.6"
