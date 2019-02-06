@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e44994d7b052a1c4cd74c3782d93026bd461fd59b459e781c9da2117b8ad9116"
+            "sha256": "5a8b250a4e389f1d759ac172e439bea4383e24eeb03cf34673c5b6afcbc33fb2"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -108,7 +108,7 @@
                 "sha256:f7a9fc2dfbbc0e838c79f908262638fb86ab326b0fbc0ea2c3dd063b3561e9e2",
                 "sha256:f9df2e626f1a8d8114a9dc05a489bdf26a8e926fbbe43112669700f25fe0abb3"
             ],
-            "markers": "extra == 'grpc'",
+            "index": "pypi",
             "version": "==1.18.0"
         },
         "idna": {
@@ -203,6 +203,13 @@
             ],
             "index": "pypi",
             "version": "==17.2.0"
+        },
+        "tonyg-rfc3339": {
+            "hashes": [
+                "sha256:e424e7b4ddf2a2f5c70d7317faecf9b69b7da099c9fc08d046c3ac679dd30d3d"
+            ],
+            "index": "pypi",
+            "version": "==0.1"
         },
         "tornado": {
             "hashes": [
