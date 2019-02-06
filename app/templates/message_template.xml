@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?><ns2:caseReceipt xmlns:ns2="http://ons.gov.uk/ctp/response/casesvc/message/feedback">{% if case_ref %}<caseRef>{{ case_ref }}</caseRef>{% endif %}<caseId>{{ case_id }}</caseId><inboundChannel>{{ inbound_channel }}</inboundChannel><responseDateTime>{{ response_datetime }}</responseDateTime></ns2:caseReceipt>

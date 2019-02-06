@@ -1,6 +1,7 @@
 import json
 import logging
 
+import jinja2
 from google.api_core.exceptions import AlreadyExists
 from google.cloud.pubsub_v1 import SubscriberClient
 from google.cloud.pubsub_v1.subscriber.message import Message
@@ -13,6 +14,9 @@ from app.rabbit_helper import send_message_to_rabbitmq
 
 logger = wrap_logger(logging.getLogger(__name__))
 client = SubscriberClient()
+
+env = jinja2.Environment(loader=jinja2.FileSystemLoader(["app/templates"]))
+jinja_template = env.get_template("message_template.xml")
 
 
 def receipt_to_case(message: Message):
@@ -27,20 +31,19 @@ def receipt_to_case(message: Message):
             logger.error('Unknown message eventType', eventType=message.attributes['eventType'])
             return
         bucket_name, object_name = message.attributes['bucketId'], message.attributes['objectId']
-        logger.debug('Message received for processing', bucket_name=bucket_name,
-                                                        message_id=message.message_id,
-                                                        object_name=object_name)
+        logger.debug('Message received for processing',
+                     bucket_name=bucket_name,
+                     message_id=message.message_id,
+                     object_name=object_name)
         payload = json.loads(message.data)
         time_obj_created = parse_datetime(payload['timeCreated']).isoformat()
     except KeyError:
         logger.exception('Message missing attribute')
         return
-    # Expects message to contain (at least) case_id AND inbound_channel (OFFLINE, ONLINE, PAPER)
-    send_message_to_rabbitmq(message=json.dumps({  # TODO: does this need to be converted to XML?
-        'inboundChannel': 'OFFLINE',               # TODO: Hardcoded to OFFLINE for all response types
-        'caseId': object_name,                     # TODO: This assumes caseId is filename
-        'responseDateTime': time_obj_created,
-    }))
+    xml_message = jinja_template.render(case_id=object_name,        # TODO: This assumes caseId is filename
+                                        inbound_channel='OFFLINE',  # TODO: Hardcoded to OFFLINE for all response types
+                                        response_datetime=time_obj_created)
+    send_message_to_rabbitmq(xml_message)
     message.ack()
 
 

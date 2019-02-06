@@ -9,6 +9,7 @@ grpcio = "*"
 sdc-rabbit = "*"
 structlog = "*"
 "tonyg-rfc3339" = "*"
+"jinja2" = "*"
 
 [dev-packages]
 codecov = "*"
