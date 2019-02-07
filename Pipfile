@@ -6,10 +6,9 @@ name = "pypi"
 [packages]
 google-cloud-pubsub = "*"
 grpcio = "*"
-sdc-rabbit = "*"
 structlog = "*"
-"tonyg-rfc3339" = "*"
 "jinja2" = "*"
+"tonyg-rfc3339" = "*"
 
 [dev-packages]
 codecov = "*"

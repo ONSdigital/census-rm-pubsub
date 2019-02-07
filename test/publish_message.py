@@ -1,5 +1,6 @@
 import sys
 import time
+import uuid
 
 from google.cloud import pubsub_v1
 
@@ -18,7 +19,7 @@ if __name__ == '__main__':
                                data=data,
                                eventType='OBJECT_FINALIZE',
                                bucketId='123',
-                               objectId='2')
+                               objectId=str(uuid.uuid4()))
 
     while not future.done():
         time.sleep(1)
