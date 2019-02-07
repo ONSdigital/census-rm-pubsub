@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 
 import jinja2
 from google.api_core.exceptions import AlreadyExists
@@ -11,6 +12,10 @@ from structlog import wrap_logger
 
 from app.rabbit_helper import send_message_to_rabbitmq
 
+
+GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID")
+EQ_TOPIC_NAME = os.getenv("GCP_TOPIC_NAME", "eq-submission-topic")
+RM_SUBSCRIPTION_NAME = os.getenv("GCP_SUBSCRIPTION_NAME", "rm-receipt-subscription")
 
 logger = wrap_logger(logging.getLogger(__name__))
 client = SubscriberClient()
@@ -47,7 +52,10 @@ def receipt_to_case(message: Message):
     message.ack()
 
 
-def setup_subscription(project_id, subscription_name, topic_name, callback=receipt_to_case):
+def setup_subscription(project_id=GCP_PROJECT_ID,
+                       subscription_name=RM_SUBSCRIPTION_NAME,
+                       topic_name=EQ_TOPIC_NAME,
+                       callback=receipt_to_case):
     """
     Create (it not exists) a new pubsub subscription in GCP to a pubsub topic
     and a subscriber thread which handles new messages through a callback

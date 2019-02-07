@@ -5,11 +5,11 @@ import pika
 from structlog import wrap_logger
 
 
-logger = wrap_logger(logging.getLogger(__name__))
-
 RM_RABBIT_AMQP = os.getenv("RABBIT_AMQP", "amqp://guest:guest@localhost:6672")
 RM_RABBIT_EXCHANGE = os.getenv("RABBIT_EXCHANGE", "case-outbound-exchange")
 RM_RABBIT_QUEUE = os.getenv("RABBIT_QUEUE", "Case.Responses.binding")
+
+logger = wrap_logger(logging.getLogger(__name__))
 
 
 def init_rabbitmq(rabbitmq_amqp=RM_RABBIT_AMQP, queue_name=RM_RABBIT_QUEUE):
