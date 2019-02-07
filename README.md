@@ -1,4 +1,26 @@
-# To test receipting against RM
+# census-rm-pubsub
+
+## Prerequisites
+
+* An existing durable rabbitmq exchange (e.g.: `case-outbound-exchange`) that can be used to publish messages which get routed to the RM Case Service (e.g.: `Case.Responses.binding`).
+
+* A GCS bucket with a [Cloud Pub/Sub notification configuration](https://cloud.google.com/storage/docs/reporting-changes):
+	```bash
+	gsutil notification create -t [TOPIC_NAME] -f json gs://[BUCKET_NAME]
+	```
+
+* Relevant environment variables:
+	```bash
+	RABBIT_AMQP=[RABBIT_URL]
+	GCP_PROJECT_ID=[PROJECT_ID]
+	RABBIT_QUEUE=[QUEUE_BINDING_ID]
+	RABBIT_EXCHANGE=[EXCHANGE_ID]
+	EQ_TOPIC_NAME=[TOPIC_NAME]
+	```
+
+* [Pipenv](https://docs.pipenv.org/index.html) for local development.
+
+## To test receipting against RM (dev)
 
 * Start RM services in Docker: 
 ```bash
@@ -14,17 +36,18 @@ popd
 curl -X POST \
   http://0.0.0.0:8191/receipts \
   -H 'Content-Type: application/json' \
+  -H 'Authorization: Basic YWRtaW46c2VjcmV0' \
   -d '{"caseId": "e72b8990-960a-4be3-b14c-06600e38ee3d"}'
 ```
 
-* Start pubsub emulator:
+* Start Cloud Pub/Sub emulator:
 ```bash
 gcloud components install pubsub-emulator
 gcloud components update
 gcloud beta emulators pubsub start
 ```
 
-* Get pubsub emulator-related environment variables:
+* Get Pub/Sub emulator-related environment variables:
 ```bash
 gcloud beta emulators pubsub env-init
 ```
@@ -59,7 +82,7 @@ python run.py
 docker logs casesvc -f
 ```
 
-* In a separate terminal, publish a message to the pubsub emulator:
+* In a separate terminal, publish a message to the Pub/Sub emulator:
 ```bash
 pipenv run python test/publish_message.py $GCP_PROJECT_ID $EQ_TOPIC_NAME
 ```

@@ -3,7 +3,7 @@ import logging
 import os
 
 import jinja2
-from google.api_core.exceptions import AlreadyExists
+from google.api_core.exceptions import AlreadyExists, PermissionDenied
 from google.cloud.pubsub_v1 import SubscriberClient
 from google.cloud.pubsub_v1.subscriber.message import Message
 from rfc3339 import parse_datetime
@@ -36,10 +36,10 @@ def receipt_to_case(message: Message):
             logger.error('Unknown message eventType', eventType=message.attributes['eventType'])
             return
         bucket_name, object_name = message.attributes['bucketId'], message.attributes['objectId']
-        logger.debug('Message received for processing',
-                     bucket_name=bucket_name,
-                     message_id=message.message_id,
-                     object_name=object_name)
+        logger.info('Message received for processing',
+                    bucket_name=bucket_name,
+                    message_id=message.message_id,
+                    object_name=object_name)
         payload = json.loads(message.data)
         time_obj_created = parse_datetime(payload['timeCreated']).isoformat()
     except KeyError:
@@ -72,6 +72,8 @@ def setup_subscription(project_id=GCP_PROJECT_ID,
         client.create_subscription(subscription_path, topic_path)
     except AlreadyExists:
         logger.info('Subscription already exists', subscription_path=subscription_path, topic_path=topic_path)
+    except PermissionDenied:
+        logger.warn('Subscription can not be created')
     else:
         logger.info('Subscription created', subscription_path=subscription_path, topic_path=topic_path)
     subscriber_future = client.subscribe(subscription_path, callback)

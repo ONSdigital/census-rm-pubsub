@@ -16,7 +16,7 @@ def main():
     """
     Main entry point of the subscriber worker
     """
-    logger_initial_config(service_name="census-rm-pubsub", log_level=os.getenv("LOG_LEVEL"))
+    logger_initial_config(service_name="census-rm-pubsub", log_level=os.getenv("LOG_LEVEL", "INFO"))
 
     init_rabbitmq()  # test the connection to the rabbitmq cluster
 
