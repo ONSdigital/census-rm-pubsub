@@ -4,19 +4,15 @@
 
 * An existing durable rabbitmq exchange (e.g.: `case-outbound-exchange`) that can be used to publish messages which get routed to the RM Case Service (e.g.: `Case.Responses.binding`).
 
-* A GCS bucket with a [Cloud Pub/Sub notification configuration](https://cloud.google.com/storage/docs/reporting-changes):
-	```bash
-	gsutil mb -c regional -l europe-west2 -p [RECEIPT_TOPIC_PROJECT_ID] gs://[BUCKET_NAME]
-	gsutil notification create -t [TOPIC_NAME] -f json gs://[BUCKET_NAME]
-	```
+* A GCS bucket with a [Cloud Pub/Sub notification configuration](https://cloud.google.com/storage/docs/reporting-changes).
 
 * Relevant environment variables:
 	```bash
 	GOOGLE_APPLICATION_CREDENTIALS
-	LOG_LEVEL	
+	LOG_LEVEL
 	RABBIT_AMQP
 	RABBIT_QUEUE
-	RABBIT_EXCHANGE	
+	RABBIT_EXCHANGE
 	RECEIPT_TOPIC_NAME
 	RECEIPT_TOPIC_PROJECT_ID
 	SUBSCRIPTION_NAME
@@ -25,7 +21,56 @@
 
 * [Pipenv](https://docs.pipenv.org/index.html) for local development.
 
-## To test receipting against RM (dev)
+# Testing
+
+* [With an existing, accessible Google Cloud Project](#to-test-receipting-against-rm-with-gcp)
+* [Without GCP (local emulation)](#to-test-receipting-against-rm-without-gcp)
+
+## To test receipting against RM (with GCP)
+
+* Create a GCS bucket with a Cloud Pub/Sub notification configuration:
+```bash
+gsutil mb -c regional -l europe-west2 -p [RECEIPT_TOPIC_PROJECT_ID] gs://[BUCKET_NAME]
+gsutil notification create -t [TOPIC_NAME] -f json gs://[BUCKET_NAME]
+```
+
+* Start RM services in Docker:
+```bash
+git clone git@github.com:ONSdigital/ras-rm-docker-dev.git
+cd ras-rm-docker-dev && make up
+```
+
+* POST to rm-sdx-gateway endpoint to create rabbitmq bindings:
+```bash
+curl -X POST \
+  http://0.0.0.0:8191/receipts \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Basic YWRtaW46c2VjcmV0' \
+  -d '{"caseId": "e72b8990-960a-4be3-b14c-06600e38ee3d"}'
+```
+
+* Create `.env` file in census-rm-pubsub directory:
+```bash
+cat > .env << EOS
+RABBIT_AMQP=amqp://guest:guest@localhost:6672
+SUBSCRIPTION_PROJECT_ID=[SUB_PROJECT_ID]
+RECEIPT_TOPIC_PROJECT_ID=[RECEIPT_TOPIC_PROJECT_ID]
+GOOGLE_APPLICATION_CREDENTIALS=[/path/to/service/account/key.json]
+RABBIT_QUEUE=Case.Responses.binding
+RABBIT_EXCHANGE=case-outbound-exchange
+RECEIPT_TOPIC_NAME=[TOPIC_NAME]
+SUBSCRIPTION_NAME=[NEW_OR_EXISTING_SUB_NAME]
+EOS
+```
+
+* Run the census-rm-pubsub application:
+```bash
+pipenv run python run.py
+```
+
+* Upload a file to the `gs://[BUCKET_NAME]` bucket
+
+## To test receipting against RM (without GCP)
 
 * Start RM services in Docker:
 ```bash
