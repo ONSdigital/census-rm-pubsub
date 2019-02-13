@@ -9,6 +9,7 @@ grpcio = "*"
 structlog = "*"
 "jinja2" = "*"
 "tonyg-rfc3339" = "*"
+pika = "*"
 
 [dev-packages]
 codecov = "*"
