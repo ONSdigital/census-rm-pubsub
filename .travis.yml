@@ -16,7 +16,7 @@ script:
   - pipenv check
 
 after_success:
-- if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+- if ([ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]) || ([ "$TRAVIS_PULL_REQUEST_BRANCH" == "add-travis-build-yml" ]); then
   docker build -t "$DESTINATION_IMAGE_NAME" .;
   docker login -u "${DOCKER_GCP_USERNAME}" -p "${DOCKER_GCP_PASSWORD}" "${DOCKER_GCP_REGISTRY}";
   docker push "$DESTINATION_IMAGE_NAME";
