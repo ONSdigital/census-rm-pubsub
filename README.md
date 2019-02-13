@@ -46,7 +46,7 @@ curl -X POST \
   http://0.0.0.0:8191/receipts \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Basic YWRtaW46c2VjcmV0' \
-  -d '{"caseId": "e72b8990-960a-4be3-b14c-06600e38ee3d"}'
+  -d '{"caseId": "e72b8990-960a-4be3-b14c-06600e38ee3d", "userId": "3b744811-07a4-4118-8022-29c922363fb2"}'
 ```
 
 * Create `.env` file in census-rm-pubsub directory:
@@ -84,7 +84,7 @@ curl -X POST \
   http://0.0.0.0:8191/receipts \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Basic YWRtaW46c2VjcmV0' \
-  -d '{"caseId": "e72b8990-960a-4be3-b14c-06600e38ee3d"}'
+  -d '{"caseId": "e72b8990-960a-4be3-b14c-06600e38ee3d", "userId": "3b744811-07a4-4118-8022-29c922363fb2"}'
 ```
 
 * Start Cloud Pub/Sub emulator:
