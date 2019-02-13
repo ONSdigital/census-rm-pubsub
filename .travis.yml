@@ -11,6 +11,8 @@ python:
 install:
   - pip install pipenv
   - pipenv install --dev --deploy
+
+script:
   - pipenv check
 
 after_success:
