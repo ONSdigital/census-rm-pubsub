@@ -106,10 +106,10 @@ export PUBSUB_EMULATOR_HOST=::1:8410
 * Create .env file in census-rm-pubsub directory:
 ```bash
 cat > .env << EOS
-RABBIT_AMQP=amqp://guest:guest@localhost:6672
-SUBSCRIPTION_PROJECT_ID=project
-RECEIPT_TOPIC_PROJECT_ID=project
-PUBSUB_EMULATOR_HOST=localhost:8410
+RABBIT_AMQP=amqp://guest:guest@localhost:6672  # taken from ras-rm-docker-dev
+SUBSCRIPTION_PROJECT_ID=project  # can be anything
+RECEIPT_TOPIC_PROJECT_ID=project  # can be anything
+PUBSUB_EMULATOR_HOST=localhost:8410  # taken from the env-init (above)
 RABBIT_QUEUE=Case.Responses.binding
 RABBIT_EXCHANGE=case-outbound-exchange
 RECEIPT_TOPIC_NAME=eq-submission-topic
