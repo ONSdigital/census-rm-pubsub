@@ -1,4 +1,5 @@
-# census-rm-pubsub [![Build Status](https://travis-ci.com/ONSdigital/census-rm-pubsub.svg?branch=master)](https://travis-ci.com/ONSdigital/census-rm-pubsub)
+# census-rm-pubsub 
+[![Build Status](https://travis-ci.com/ONSdigital/census-rm-pubsub.svg?branch=master)](https://travis-ci.com/ONSdigital/census-rm-pubsub)
 
 ## Prerequisites
 
