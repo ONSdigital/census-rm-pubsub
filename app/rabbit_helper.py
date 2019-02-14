@@ -10,6 +10,9 @@ RM_RABBIT_EXCHANGE = os.getenv("RABBIT_EXCHANGE", "case-outbound-exchange")
 RM_RABBIT_QUEUE = os.getenv("RABBIT_QUEUE", "Case.Responses")
 RM_RABBIT_ROUTE = os.getenv("RABBIT_ROUTING_KEY", "Case.Responses.binding")
 
+RM_RABBIT_QUEUE_ARGS = {'x-dead-letter-exchange': 'case-deadletter-exchange',
+                        'x-dead-letter-routing-key': RM_RABBIT_ROUTE}
+
 logger = wrap_logger(logging.getLogger(__name__))
 
 
@@ -28,8 +31,8 @@ def init_rabbitmq(rabbitmq_amqp=RM_RABBIT_AMQP,
     logger.debug('Connecting to rabbitmq', url=rabbitmq_amqp)
     rabbitmq_connection = pika.BlockingConnection(pika.URLParameters(rabbitmq_amqp))
     channel = rabbitmq_connection.channel()
-    channel.exchange_declare(exchange=exchange_name, exchange_type='direct')
-    channel.queue_declare(queue=queue_name, durable=True)
+    channel.exchange_declare(exchange=exchange_name, exchange_type='direct', durable=True)
+    channel.queue_declare(queue=queue_name, durable=True, arguments=RM_RABBIT_QUEUE_ARGS)
     channel.queue_bind(exchange=exchange_name, queue=queue_name, routing_key=binding_key)
     logger.info('Successfully initialised rabbitmq', exchange=exchange_name, binding=binding_key)
 
