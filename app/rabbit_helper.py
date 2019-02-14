@@ -20,7 +20,8 @@ def init_rabbitmq(rabbitmq_amqp=RM_RABBIT_AMQP, queue_name=RM_RABBIT_QUEUE):
     :param queue_name: The rabbit queue to publish to
     """
     logger.debug('Connecting to rabbitmq', url=rabbitmq_amqp)
-    rabbitmq_connection = pika.BlockingConnection(pika.URLParameters(rabbitmq_amqp))
+    urlThing = pika.URLParameters(rabbitmq_amqp)
+    rabbitmq_connection = pika.BlockingConnection(urlThing)
     _ = rabbitmq_connection.channel()
     logger.info('Successfully initialised rabbitmq', queue=queue_name)
 
