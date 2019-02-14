@@ -13,6 +13,7 @@
 	RABBIT_AMQP
 	RABBIT_QUEUE
 	RABBIT_EXCHANGE
+	RABBIT_ROUTE
 	RECEIPT_TOPIC_NAME
 	RECEIPT_TOPIC_PROJECT_ID
 	SUBSCRIPTION_NAME
@@ -40,15 +41,6 @@ git clone git@github.com:ONSdigital/ras-rm-docker-dev.git
 cd ras-rm-docker-dev && make up
 ```
 
-* POST to rm-sdx-gateway endpoint to create rabbitmq bindings:
-```bash
-curl -X POST \
-  http://0.0.0.0:8191/receipts \
-  -H 'Content-Type: application/json' \
-  -H 'Authorization: Basic YWRtaW46c2VjcmV0' \
-  -d '{"caseId": "e72b8990-960a-4be3-b14c-06600e38ee3d", "userId": "3b744811-07a4-4118-8022-29c922363fb2"}'
-```
-
 * Create `.env` file in census-rm-pubsub directory:
 ```bash
 cat > .env << EOS
@@ -56,8 +48,9 @@ RABBIT_AMQP=amqp://guest:guest@localhost:6672
 SUBSCRIPTION_PROJECT_ID=[SUB_PROJECT_ID]
 RECEIPT_TOPIC_PROJECT_ID=[RECEIPT_TOPIC_PROJECT_ID]
 GOOGLE_APPLICATION_CREDENTIALS=[/path/to/service/account/key.json]
-RABBIT_QUEUE=Case.Responses.binding
+RABBIT_QUEUE=Case.Responses
 RABBIT_EXCHANGE=case-outbound-exchange
+RABBIT_ROUTE=Case.Responses.binding
 RECEIPT_TOPIC_NAME=[TOPIC_NAME]
 SUBSCRIPTION_NAME=[NEW_OR_EXISTING_SUB_NAME]
 EOS
@@ -78,15 +71,6 @@ git clone git@github.com:ONSdigital/ras-rm-docker-dev.git
 cd ras-rm-docker-dev && make up
 ```
 
-* POST to rm-sdx-gateway endpoint to create rabbitmq bindings: 
-```bash
-curl -X POST \
-  http://0.0.0.0:8191/receipts \
-  -H 'Content-Type: application/json' \
-  -H 'Authorization: Basic YWRtaW46c2VjcmV0' \
-  -d '{"caseId": "e72b8990-960a-4be3-b14c-06600e38ee3d", "userId": "3b744811-07a4-4118-8022-29c922363fb2"}'
-```
-
 * Start Cloud Pub/Sub emulator:
 ```bash
 gcloud components install pubsub-emulator
@@ -103,15 +87,16 @@ example output:
 export PUBSUB_EMULATOR_HOST=::1:8410
 ```
 
-* Create .env file in census-rm-pubsub directory:
+* Create `.env` file in census-rm-pubsub directory:
 ```bash
 cat > .env << EOS
 RABBIT_AMQP=amqp://guest:guest@localhost:6672  # taken from ras-rm-docker-dev
 SUBSCRIPTION_PROJECT_ID=project  # can be anything
 RECEIPT_TOPIC_PROJECT_ID=project  # can be anything
 PUBSUB_EMULATOR_HOST=localhost:8410  # taken from the env-init (above)
-RABBIT_QUEUE=Case.Responses.binding
+RABBIT_QUEUE=Case.Responses
 RABBIT_EXCHANGE=case-outbound-exchange
+RABBIT_ROUTE=Case.Responses.binding
 RECEIPT_TOPIC_NAME=eq-submission-topic
 SUBSCRIPTION_NAME=rm-receipt-subscription
 EOS
