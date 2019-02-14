@@ -118,5 +118,6 @@ docker logs casesvc -f
 
 * In a separate terminal, publish a message to the Pub/Sub emulator:
 ```bash
-pipenv run python test/publish_message.py $RECEIPT_TOPIC_PROJECT_ID $RECEIPT_TOPIC_NAME
+pipenv shell
+python test/publish_message.py $RECEIPT_TOPIC_PROJECT_ID $RECEIPT_TOPIC_NAME
 ```
