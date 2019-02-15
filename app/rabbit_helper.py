@@ -1,6 +1,5 @@
 import logging
 import os
-
 import pika
 from structlog import wrap_logger
 
@@ -8,7 +7,6 @@ RM_RABBIT_AMQP = os.getenv("RABBIT_AMQP", "amqp://guest:guest@localhost:6672")
 RM_RABBIT_EXCHANGE = os.getenv("RABBIT_EXCHANGE", "case-outbound-exchange")
 RM_RABBIT_QUEUE = os.getenv("RABBIT_QUEUE", "Case.Responses")
 RM_RABBIT_ROUTE = os.getenv("RABBIT_ROUTING_KEY", "Case.Responses.binding")
-
 RM_RABBIT_QUEUE_ARGS = {'x-dead-letter-exchange': 'case-deadletter-exchange',
                         'x-dead-letter-routing-key': RM_RABBIT_ROUTE}
 
@@ -28,9 +26,7 @@ def init_rabbitmq(rabbitmq_amqp=RM_RABBIT_AMQP,
     :param binding_key: The binding key to associate the exchange and queue (e.g.: "Case.Responses.binding")
     """
     logger.debug('Connecting to rabbitmq', url=rabbitmq_amqp)
-    urlThing = pika.URLParameters(rabbitmq_amqp)
-    rabbitmq_connection = pika.BlockingConnection(urlThing)
-    # rabbitmq_connection = pika.BlockingConnection(pika.URLParameters(rabbitmq_amqp))
+    rabbitmq_connection = pika.BlockingConnection(pika.URLParameters(rabbitmq_amqp))
     channel = rabbitmq_connection.channel()
     channel.exchange_declare(exchange=exchange_name, exchange_type='direct', durable=True)
     channel.queue_declare(queue=queue_name, durable=True, arguments=RM_RABBIT_QUEUE_ARGS)
