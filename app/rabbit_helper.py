@@ -1,15 +1,12 @@
 import logging
 import os
-
 import pika
 from structlog import wrap_logger
-
 
 RM_RABBIT_AMQP = os.getenv("RABBIT_AMQP", "amqp://guest:guest@localhost:6672")
 RM_RABBIT_EXCHANGE = os.getenv("RABBIT_EXCHANGE", "case-outbound-exchange")
 RM_RABBIT_QUEUE = os.getenv("RABBIT_QUEUE", "Case.Responses")
 RM_RABBIT_ROUTE = os.getenv("RABBIT_ROUTING_KEY", "Case.Responses.binding")
-
 RM_RABBIT_QUEUE_ARGS = {'x-dead-letter-exchange': 'case-deadletter-exchange',
                         'x-dead-letter-routing-key': RM_RABBIT_ROUTE}
 
