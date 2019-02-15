@@ -19,6 +19,7 @@
 	RECEIPT_TOPIC_PROJECT_ID
 	SUBSCRIPTION_NAME
 	SUBSCRIPTION_PROJECT_ID
+    READINESS_FILE_PATH
 	```
 
 * [Pipenv](https://docs.pipenv.org/index.html) for local development.
@@ -54,6 +55,7 @@ RABBIT_EXCHANGE=case-outbound-exchange
 RABBIT_ROUTE=Case.Responses.binding
 RECEIPT_TOPIC_NAME=[TOPIC_NAME]
 SUBSCRIPTION_NAME=[NEW_OR_EXISTING_SUB_NAME]
+READINESS_FILE_PATH=/tmp/pubsub_ready
 EOS
 ```
 
@@ -100,6 +102,7 @@ RABBIT_EXCHANGE=case-outbound-exchange
 RABBIT_ROUTE=Case.Responses.binding
 RECEIPT_TOPIC_NAME=eq-submission-topic
 SUBSCRIPTION_NAME=rm-receipt-subscription
+READINESS_FILE_PATH=/tmp/pubsub_ready
 EOS
 ```
 
