@@ -32,7 +32,7 @@ def test_rabbit_init():
 
         channel_mock.exchange_declare.assert_called_once_with(exchange=RM_RABBIT_EXCHANGE, exchange_type='direct',
                                                               durable=True)
-        channel_mock.queue_declareassert_called_once_with(queue=RM_RABBIT_QUEUE, durable=True,
+        channel_mock.queue_declare.assert_called_once_with(queue=RM_RABBIT_QUEUE, durable=True,
                                                           arguments=RM_RABBIT_QUEUE_ARGS)
         channel_mock.queue_bind(exchange=RM_RABBIT_EXCHANGE, queue=RM_RABBIT_QUEUE, routing_key=RM_BINDING_KEY)
 
