@@ -1,0 +1,32 @@
+sudo: required
+
+services:
+  - docker
+
+language: python
+
+python:
+  - "3.6"
+
+install:
+  - pip install pipenv
+  - pipenv install --dev --deploy
+
+script:
+  - pipenv check
+
+after_success:
+- if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+  docker build -t "$DESTINATION_IMAGE_NAME" .;
+  docker login -u "${DOCKER_GCP_USERNAME}" -p "${DOCKER_GCP_PASSWORD}" "${DOCKER_GCP_REGISTRY}";
+  docker push "$DESTINATION_IMAGE_NAME";
+  fi
+
+env:
+  global:
+    - PIPENV_IGNORE_VIRTUALENVS=1
+    - DESTINATION_IMAGE_NAME="$DOCKER_GCP_LOCATION/census-rm-pubsub"
+
+branches:
+  only:
+    - master
