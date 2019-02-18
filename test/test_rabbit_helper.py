@@ -53,7 +53,9 @@ class RabbitHelperTestCase(TestCase):
                                                                   durable=True)
             channel_mock.queue_declare.assert_called_once_with(arguments=self.queue_args, durable=True,
                                                                queue=RM_RABBIT_QUEUE)
-            channel_mock.queue_bind(exchange=RM_RABBIT_EXCHANGE, queue=RM_RABBIT_QUEUE, routing_key=RM_BINDING_KEY)
+            channel_mock.queue_bind.assert_called_once_with(exchange=RM_RABBIT_EXCHANGE,
+                                                            queue=RM_RABBIT_QUEUE,
+                                                            routing_key=RM_BINDING_KEY)
 
     def test_initialise_messaging_rabbit_fails(self):
         from app.rabbit_helper import init_rabbitmq
@@ -85,8 +87,3 @@ class RabbitHelperTestCase(TestCase):
                                                                body=str(self.message),
                                                                properties=self.property_class)
             connection_mock.close.assert_called_once()
-
-
-# TODO
-# do we need to test any errors here really? presently the App does not deal with them.  Presume it would crash and attempt restart?
-# Can't really do a lot if rabbit or pubsub not there
