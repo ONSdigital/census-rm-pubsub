@@ -33,8 +33,9 @@
 
 * Create a GCS bucket with a Cloud Pub/Sub notification configuration:
 ```bash
-gsutil mb -c regional -l europe-west2 -p [RECEIPT_TOPIC_PROJECT_ID] gs://[BUCKET_NAME]
+gsutil mb -c regional -l europe-west2 -p [TOPIC_PROJECT_ID] gs://[BUCKET_NAME]
 gsutil notification create -t [TOPIC_NAME] -f json gs://[BUCKET_NAME]
+gcloud beta pubsub subscriptions create --topic [TOPIC_NAME] [SUBSCRIPTION_NAME]
 ```
 
 * Start RM services in Docker:
@@ -48,14 +49,14 @@ cd ras-rm-docker-dev && make up
 cat > .env << EOS
 RABBIT_AMQP=amqp://guest:guest@localhost:6672
 SUBSCRIPTION_PROJECT_ID=[SUB_PROJECT_ID]
-RECEIPT_TOPIC_PROJECT_ID=[RECEIPT_TOPIC_PROJECT_ID]
+RECEIPT_TOPIC_PROJECT_ID=[TOPIC_PROJECT_ID]
 GOOGLE_APPLICATION_CREDENTIALS=[/path/to/service/account/key.json]
 RABBIT_QUEUE=Case.Responses
 RABBIT_EXCHANGE=case-outbound-exchange
 RABBIT_ROUTE=Case.Responses.binding
 RECEIPT_TOPIC_NAME=[TOPIC_NAME]
-SUBSCRIPTION_NAME=[NEW_OR_EXISTING_SUB_NAME]
 READINESS_FILE_PATH=/tmp/pubsub_ready
+SUBSCRIPTION_NAME=[SUBSCRIPTION_NAME]
 EOS
 ```
 
@@ -64,7 +65,12 @@ EOS
 pipenv run python run.py
 ```
 
-* Upload a file to the `gs://[BUCKET_NAME]` bucket
+* Upload a file to the `gs://[BUCKET_NAME]` bucket, e.g.:
+```bash
+new_uuid=`python -c "import uuid;print(uuid.uuid4())"`
+touch $new_uuid
+gsutil cp $new_uuid gs://[BUCKET_NAME]
+```
 
 ## To test receipting against RM (without GCP)
 
@@ -111,7 +117,8 @@ EOS
 pipenv install
 pipenv shell
 
-python test/create_topic.py $RECEIPT_TOPIC_PROJECT_ID $RECEIPT_TOPIC_NAME
+python test/helpers/create_topic.py $RECEIPT_TOPIC_PROJECT_ID $RECEIPT_TOPIC_NAME
+python test/helpers/create_subscription.py $RECEIPT_TOPIC_PROJECT_ID $RECEIPT_TOPIC_NAME $SUBSCRIPTION_NAME
 python run.py
 ```
 
@@ -123,5 +130,5 @@ docker logs casesvc -f
 * In a separate terminal, publish a message to the Pub/Sub emulator:
 ```bash
 pipenv shell
-python test/publish_message.py $RECEIPT_TOPIC_PROJECT_ID $RECEIPT_TOPIC_NAME
+python test/helpers/publish_message.py $RECEIPT_TOPIC_PROJECT_ID $RECEIPT_TOPIC_NAME
 ```
