@@ -62,7 +62,12 @@ EOS
 pipenv run python run.py
 ```
 
-* Upload a file to the `gs://[BUCKET_NAME]` bucket
+* Upload a file to the `gs://[BUCKET_NAME]` bucket, e.g.:
+```bash
+new_uuid=`python -c "import uuid;print(uuid.uuid4())"`
+touch $new_uuid
+gsutil cp $new_uuid gs://[BUCKET_NAME]
+```
 
 ## To test receipting against RM (without GCP)
 
