@@ -22,7 +22,7 @@ def main():
     init_rabbitmq()  # test the connection to the rabbitmq cluster
 
     subscriber_future = setup_subscription()
-    with Readiness(os.getenv('READINESS_FILE_PATH')):  # Indicate ready after successful setup
+    with Readiness(os.getenv('READINESS_FILE_PATH', os.path.join(os.getcwd(), 'pubsub-ready'))):  # Indicate ready after successful setup
         while True:  # setup_subscription creates a background thread for processing messages
             subscriber_future.result(timeout=None)  # block main thread while polling for messages indefinitely
             time.sleep(30)
