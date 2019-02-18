@@ -64,9 +64,14 @@ pipenv run python run.py
 
 * Upload a file to the `gs://[BUCKET_NAME]` bucket, e.g.:
 ```bash
-new_uuid=`python -c "import uuid;print(uuid.uuid4())"`
-touch $new_uuid
-gsutil cp $new_uuid gs://[BUCKET_NAME]
+case_uuid=`python -c "import uuid;print(uuid.uuid4())"`
+tx_uuid=`python -c "import uuid;print(uuid.uuid4())"`
+
+touch $tx_uuid
+
+gsutil -h x-goog-meta-case_id:$case_uuid \
+	   -h x-goog-meta-tx_id:$tx_uuid \
+	   cp $tx_uuid gs://[BUCKET_NAME]
 ```
 
 ## To test receipting against RM (without GCP)

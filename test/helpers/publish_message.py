@@ -1,3 +1,4 @@
+import json
 import sys
 import time
 import uuid
@@ -13,13 +14,21 @@ if __name__ == '__main__':
         print('Usage: python publish_message.py PROJECT_ID TOPIC_ID')
         sys.exit()
 
-    data = '{"timeCreated":"2008-08-24T00:00:00Z"}'.encode('utf-8')
+    tx_id = str(uuid.uuid4())
+    case_id = str(uuid.uuid4())
+    data = json.dumps({
+        "timeCreated": "2008-08-24T00:00:00Z",
+        "metadata": {
+            "case_id": case_id,
+            "tx_id": tx_id,
+        }
+    })
 
     future = publisher.publish(topic_path,
-                               data=data,
+                               data=data.encode('utf-8'),
                                eventType='OBJECT_FINALIZE',
                                bucketId='123',
-                               objectId=str(uuid.uuid4()))
+                               objectId=tx_id)
 
     while not future.done():
         time.sleep(1)

@@ -37,16 +37,23 @@ def receipt_to_case(message: Message):
             logger.error('Unknown message eventType', eventType=message.attributes['eventType'])
             return
         bucket_name, object_name = message.attributes['bucketId'], message.attributes['objectId']
-        logger.info('Message received for processing',
-                    bucket_name=bucket_name,
-                    message_id=message.message_id,
-                    object_name=object_name)
-        payload = json.loads(message.data)
-        time_obj_created = parse_datetime(payload['timeCreated']).isoformat()
-    except KeyError:
-        logger.exception('Message missing attribute')
+        payload = json.loads(message.data)  # parse metadata as JSON payload
+        metadata = payload['metadata']
+        case_id, tx_id, created = metadata['case_id'], metadata['tx_id'], payload['timeCreated']
+    except KeyError as e:
+        logger.error('Message missing required data', missing=e.args[0])
         return
-    xml_message = jinja_template.render(case_id=object_name,        # TODO: This assumes caseId is filename
+
+    time_obj_created = parse_datetime(created).isoformat()
+
+    logger.info('Message received for processing',
+                bucket_name=bucket_name,
+                message_id=message.message_id,
+                object_name=object_name,
+                case_id=case_id,
+                tx_id=tx_id)
+
+    xml_message = jinja_template.render(case_id=case_id,
                                         inbound_channel='OFFLINE',  # TODO: Hardcoded to OFFLINE for all response types
                                         response_datetime=time_obj_created)
     send_message_to_rabbitmq(xml_message)
