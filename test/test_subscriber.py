@@ -5,8 +5,6 @@ from unittest.mock import patch, MagicMock
 from test.helpers.when_then_return import create_when_then_return
 
 
-RECEIPT_TOPIC_NAME = 'test-topic'
-RECEIPT_TOPIC_PROJECT_ID = 'test-project'
 SUBSCRIPTION_NAME = 'test-subscription'
 SUBSCRIPTION_PROJECT_ID = 'test-project-id'
 
@@ -17,12 +15,9 @@ class TestSubscriber(TestCase):
     subscriber_future = 'test-future'
     subscription_path = 'test-subscription-path'
     test_data = 'test-data'
-    topic_path = 'test-topic-path'
 
     def setUp(self):
         test_environment_variables = {
-            'RECEIPT_TOPIC_NAME': RECEIPT_TOPIC_NAME,
-            'RECEIPT_TOPIC_PROJECT_ID': RECEIPT_TOPIC_PROJECT_ID,
             'SUBSCRIPTION_NAME': SUBSCRIPTION_NAME,
             'SUBSCRIPTION_PROJECT_ID': SUBSCRIPTION_PROJECT_ID,
         }
@@ -34,19 +29,13 @@ class TestSubscriber(TestCase):
         with patch('app.subscriber.client') as mock_client:
             callback_func = create_when_then_return(None, return_value=None)
 
-            mock_client.topic_path = create_when_then_return(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME,
-                                                             return_value=self.topic_path)
             mock_client.subscription_path = create_when_then_return(SUBSCRIPTION_PROJECT_ID, SUBSCRIPTION_NAME,
                                                                     return_value=self.subscription_path)
-            mock_client.create_subscription = create_when_then_return(self.subscription_path, self.topic_path,
-                                                                      return_value=None)
             mock_client.subscribe = create_when_then_return(self.subscription_path, callback_func,
                                                             return_value=self.subscriber_future)
 
             actual_future = setup_subscription(subscription_name=SUBSCRIPTION_NAME,
                                                subscription_project_id=SUBSCRIPTION_PROJECT_ID,
-                                               topic_name=RECEIPT_TOPIC_NAME,
-                                               topic_project_id=RECEIPT_TOPIC_PROJECT_ID,
                                                callback=callback_func)
 
         assert actual_future == self.subscriber_future
