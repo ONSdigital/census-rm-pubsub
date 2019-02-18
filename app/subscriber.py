@@ -3,7 +3,6 @@ import logging
 import os
 
 import jinja2
-from google.api_core.exceptions import AlreadyExists, PermissionDenied
 from google.cloud.pubsub_v1 import SubscriberClient
 from google.cloud.pubsub_v1.subscriber.message import Message
 from rfc3339 import parse_datetime
@@ -13,8 +12,6 @@ from structlog import wrap_logger
 from app.rabbit_helper import send_message_to_rabbitmq
 
 
-RECEIPT_TOPIC_NAME = os.getenv("RECEIPT_TOPIC_NAME", "eq-submission-topic")
-RECEIPT_TOPIC_PROJECT_ID = os.getenv("RECEIPT_TOPIC_PROJECT_ID")
 SUBSCRIPTION_NAME = os.getenv("SUBSCRIPTION_NAME", "rm-receipt-subscription")
 SUBSCRIPTION_PROJECT_ID = os.getenv("SUBSCRIPTION_PROJECT_ID")
 
@@ -34,19 +31,19 @@ def receipt_to_case(message: Message):
     """
     try:
         if message.attributes['eventType'] != 'OBJECT_FINALIZE':  # receipt only on object creation
-            logger.error('Unknown message eventType', eventType=message.attributes['eventType'])
+            logger.error('Unknown Pub/Sub Message eventType', eventType=message.attributes['eventType'])
             return
         bucket_name, object_name = message.attributes['bucketId'], message.attributes['objectId']
         payload = json.loads(message.data)  # parse metadata as JSON payload
         metadata = payload['metadata']
         case_id, tx_id, created = metadata['case_id'], metadata['tx_id'], payload['timeCreated']
     except KeyError as e:
-        logger.error('Message missing required data', missing=e.args[0])
+        logger.error('Pub/Sub Message missing required data', missing=e.args[0])
         return
 
     time_obj_created = parse_datetime(created).isoformat()
 
-    logger.info('Message received for processing',
+    logger.info('Pub/Sub Message received for processing',
                 bucket_name=bucket_name,
                 message_id=message.message_id,
                 object_name=object_name,
@@ -62,30 +59,16 @@ def receipt_to_case(message: Message):
 
 def setup_subscription(subscription_name=SUBSCRIPTION_NAME,
                        subscription_project_id=SUBSCRIPTION_PROJECT_ID,
-                       topic_name=RECEIPT_TOPIC_NAME,
-                       topic_project_id=RECEIPT_TOPIC_PROJECT_ID,
                        callback=receipt_to_case):
     """
-    Create (it not exists) a new pubsub subscription in GCP to a pubsub topic
-    and a subscriber thread which handles new messages through a callback
+    Create a subscriber thread which handles new messages through a callback
 
     :param subscription_name: The name of the pubsub subscription
-    :param subscription_project_id: GCP project where subscription should exist
-    :param topic_name: The pubsub topic to subscribe to
-    :param topic_project_id: GCP project where topic should exist
+    :param subscription_project_id: GCP project where subscription should already exist
     :param callback: The callback to use upon receipt of a new message from the subscription
     :return: a StreamingPullFuture for managing the callback thread
     """
-    topic_path = client.topic_path(topic_project_id, topic_name)
     subscription_path = client.subscription_path(subscription_project_id, subscription_name)
-    try:
-        client.create_subscription(subscription_path, topic_path)
-    except AlreadyExists:
-        logger.info('Subscription already exists', subscription_path=subscription_path, topic_path=topic_path)
-    except PermissionDenied:
-        logger.exception('Subscription can not be created')
-    else:
-        logger.info('Subscription created', subscription_path=subscription_path, topic_path=topic_path)
     subscriber_future = client.subscribe(subscription_path, callback)
-    logger.info('Listening for messages', subscription_path=subscription_path, topic_path=topic_path)
+    logger.info('Listening for Pub/Sub Messages', subscription_path=subscription_path)
     return subscriber_future
