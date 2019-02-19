@@ -16,7 +16,8 @@ logger = wrap_logger(logging.getLogger(__name__))
 def init_rabbitmq(rabbitmq_amqp=RM_RABBIT_AMQP,
                   binding_key=RM_RABBIT_ROUTE,
                   exchange_name=RM_RABBIT_EXCHANGE,
-                  queue_name=RM_RABBIT_QUEUE):
+                  queue_name=RM_RABBIT_QUEUE,
+                  queue_args=RM_RABBIT_QUEUE_ARGS):
     """
     Initialise connection to rabbitmq
 
@@ -24,12 +25,13 @@ def init_rabbitmq(rabbitmq_amqp=RM_RABBIT_AMQP,
     :param exchange_name: The rabbitmq exchange to publish to, (e.g.: "case-outbound-exchange")
     :param queue_name: The rabbitmq queue that subscribes to the exchange, (e.g.: "Case.Responses")
     :param binding_key: The binding key to associate the exchange and queue (e.g.: "Case.Responses.binding")
+    :param queue_args: Arguments passed to the rabbitmq queue declaration
     """
     logger.debug('Connecting to rabbitmq', url=rabbitmq_amqp)
     rabbitmq_connection = pika.BlockingConnection(pika.URLParameters(rabbitmq_amqp))
     channel = rabbitmq_connection.channel()
     channel.exchange_declare(exchange=exchange_name, exchange_type='direct', durable=True)
-    channel.queue_declare(queue=queue_name, durable=True, arguments=RM_RABBIT_QUEUE_ARGS)
+    channel.queue_declare(queue=queue_name, durable=True, arguments=queue_args)
     channel.queue_bind(exchange=exchange_name, queue=queue_name, routing_key=binding_key)
     logger.info('Successfully initialised rabbitmq', exchange=exchange_name, binding=binding_key)
 
