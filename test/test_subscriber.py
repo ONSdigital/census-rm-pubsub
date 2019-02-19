@@ -2,7 +2,7 @@ import os
 from unittest import TestCase
 from unittest.mock import patch, MagicMock
 
-from test.helpers.when_then_return import create_when_then_return
+from test import create_stub_function
 
 
 SUBSCRIPTION_NAME = 'test-subscription'
@@ -27,12 +27,12 @@ class TestSubscriber(TestCase):
         from app.subscriber import setup_subscription
 
         with patch('app.subscriber.client') as mock_client:
-            callback_func = create_when_then_return(None, return_value=None)
+            callback_func = create_stub_function(return_value=None)
 
-            mock_client.subscription_path = create_when_then_return(SUBSCRIPTION_PROJECT_ID, SUBSCRIPTION_NAME,
-                                                                    return_value=self.subscription_path)
-            mock_client.subscribe = create_when_then_return(self.subscription_path, callback_func,
-                                                            return_value=self.subscriber_future)
+            mock_client.subscription_path = create_stub_function(SUBSCRIPTION_PROJECT_ID, SUBSCRIPTION_NAME,
+                                                                 return_value=self.subscription_path)
+            mock_client.subscribe = create_stub_function(self.subscription_path, callback_func,
+                                                         return_value=self.subscriber_future)
 
             actual_future = setup_subscription(subscription_name=SUBSCRIPTION_NAME,
                                                subscription_project_id=SUBSCRIPTION_PROJECT_ID,
@@ -52,7 +52,7 @@ class TestSubscriber(TestCase):
 
             with patch('app.subscriber.json') as mock_json:
                 payload = {'timeCreated': '2018-08-24T00:00:00Z'}
-                mock_json.loads = create_when_then_return(self.test_data, return_value=payload)
+                mock_json.loads = create_stub_function(self.test_data, return_value=payload)
 
                 receipt_to_case(mock_message)
 
@@ -76,7 +76,7 @@ class TestSubscriber(TestCase):
 
             with patch('app.subscriber.json') as json_mock:
                 payload = {'timeCreated': '2018-08-24T00:00:00Z'}
-                json_mock.loads = create_when_then_return(self.test_data, return_value=payload)
+                json_mock.loads = create_stub_function(self.test_data, return_value=payload)
 
                 receipt_to_case(mock_message)
 

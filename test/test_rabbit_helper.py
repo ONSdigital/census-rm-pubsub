@@ -5,7 +5,7 @@ from unittest import TestCase
 from pika.exceptions import AMQPConnectionError
 from pytest import raises
 
-from test.helpers.when_then_return import create_when_then_return, create_when_then_return_kwargs
+from test import create_stub_function
 
 
 RM_RABBIT_AMQP = "amqp://user:pa55word@host:0001"
@@ -15,7 +15,6 @@ RM_RABBIT_EXCHANGE = "test-exchange"
 
 
 class RabbitHelperTestCase(TestCase):
-
     property_class = 'property_class'
     rabbit_url = 'rabbit_url'
     rabbit_connection = 'rabbit connection'
@@ -37,11 +36,11 @@ class RabbitHelperTestCase(TestCase):
 
         with patch('app.rabbit_helper.pika') as mock_pika:
             connection_mock = MagicMock()
-            mock_pika.URLParameters = create_when_then_return(RM_RABBIT_AMQP, return_value=self.rabbit_url)
-            mock_pika.BlockingConnection = create_when_then_return(self.rabbit_url, return_value=connection_mock)
+            mock_pika.URLParameters = create_stub_function(RM_RABBIT_AMQP, return_value=self.rabbit_url)
+            mock_pika.BlockingConnection = create_stub_function(self.rabbit_url, return_value=connection_mock)
 
             channel_mock = MagicMock()
-            connection_mock.channel = create_when_then_return(return_value=channel_mock)
+            connection_mock.channel = create_stub_function(return_value=channel_mock)
 
             init_rabbitmq(rabbitmq_amqp=RM_RABBIT_AMQP,
                           binding_key=RM_BINDING_KEY,
@@ -69,13 +68,13 @@ class RabbitHelperTestCase(TestCase):
 
         with patch('app.rabbit_helper.pika') as mock_pika:
             connection_mock = MagicMock()
-            mock_pika.URLParameters = create_when_then_return(RM_RABBIT_AMQP, return_value=self.rabbit_url)
-            mock_pika.BlockingConnection = create_when_then_return(self.rabbit_url, return_value=connection_mock)
+            mock_pika.URLParameters = create_stub_function(RM_RABBIT_AMQP, return_value=self.rabbit_url)
+            mock_pika.BlockingConnection = create_stub_function(self.rabbit_url, return_value=connection_mock)
 
             channel_mock = MagicMock()
-            connection_mock.channel = create_when_then_return(return_value=channel_mock)
-            mock_pika.BasicProperties = create_when_then_return_kwargs({'content_type': 'text/xml'},
-                                                                       return_value=self.property_class)
+            connection_mock.channel = create_stub_function(return_value=channel_mock)
+            mock_pika.BasicProperties = create_stub_function(expected_kwargs={'content_type': 'text/xml'},
+                                                             return_value=self.property_class)
 
             send_message_to_rabbitmq(self.message,
                                      rabbitmq_amqp=RM_RABBIT_AMQP,
