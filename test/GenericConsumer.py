@@ -35,8 +35,10 @@ class GenericConsumer(object):
 if __name__ == '__main__':
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
 
+
     def callback(ch, method, properties, body):
         print(body)
         return True
+
 
     consumer = GenericConsumer(connection.channel(), 'queue_name', callback)
