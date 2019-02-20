@@ -1,3 +1,4 @@
+import asyncio
 import time
 import uuid
 from unittest import TestCase
@@ -5,7 +6,6 @@ from unittest import TestCase
 import pika
 from google.api_core.exceptions import AlreadyExists, PermissionDenied
 from google.cloud import pubsub_v1
-
 
 from test.scripts import create_topic
 from coverage.python import os
@@ -37,16 +37,45 @@ os.environ["SUBSCRIPTION_NAME"] = "rm-receipt-subscription"
 class CensusRMPubSubComponentTest(TestCase):
     # callback_called = False
 
+    msg_body = ""
+
     def test_e2e_good(self):
+        channel, queue_declare_result = init_rabbitmq()
+        channel.queue_purge(queue=RABBIT_QUEUE)
         create_topic(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME)
         create_subscription(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME, SUBSCRIPTION_NAME)
 
         published_message = publish_to_pubsub(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME)
 
         channel, queue_declare_result = init_rabbitmq()
-        channel.queue_purge(queue=RABBIT_QUEUE)
+
+        self.msg_body = ""
+
+        def callback(ch, method, properties, body):
+            print(" [x] %r" % body)
+            self.msg_body = body
+            channel.stop_consuming()
 
         assert queue_declare_result.method.message_count == 1
+        res = channel.basic_get(queue=RABBIT_QUEUE)
+
+        #
+        # channel.basic_consume(callback,
+        #                       queue=RABBIT_QUEUE,
+        #                       no_ack=True)
+        # channel.start_consuming()
+        #
+
+        # while True:
+        #     if self.msg_body == "":
+        #         asyncio.sleep(1)
+
+
+
+        expected_msg = b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><ns2:caseReceipt xmlns:ns2="http://ons.gov.uk/ctp/response/casesvc/message/feedback"><caseId>c559e2ad-4be2-4af6-91f9-6f51158ee555</caseId><inboundChannel>OFFLINE</inboundChannel><responseDateTime>2008-08-24T00:00:00+00:00</responseDateTime></ns2:caseReceipt>'
+
+        # TODO Not matching? don't why
+        assert expected_msg == self.msg_body
 
 
 def create_topic(a, b):
