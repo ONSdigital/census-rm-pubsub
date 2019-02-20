@@ -9,3 +9,9 @@ test:
 	pipenv check
 	pipenv run flake8 .
 	pipenv run pytest test/
+
+up:
+	docker-compose up;
+	pipenv install --dev
+	./setup_pubsub.sh
+
