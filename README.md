@@ -26,8 +26,26 @@
 
 # Testing
 
+* [Running the unit tests locally](#running-the-unit-tests-locally)
 * [With an existing, accessible Google Cloud Project](#to-test-receipting-against-rm-with-gcp)
 * [Without GCP (local emulation)](#to-test-receipting-against-rm-without-gcp)
+
+## Running the unit tests locally
+
+* Install dev packages:
+```bash
+pipenv install --dev
+```
+
+* Run the unit tests with pytest:
+```bash
+pipenv run pytest test/
+```
+
+Or:
+```bash
+make test
+```
 
 ## To test receipting against RM (with GCP)
 
@@ -117,8 +135,8 @@ EOS
 pipenv install
 pipenv shell
 
-python test/helpers/create_topic.py $RECEIPT_TOPIC_PROJECT_ID $RECEIPT_TOPIC_NAME
-python test/helpers/create_subscription.py $RECEIPT_TOPIC_PROJECT_ID $RECEIPT_TOPIC_NAME $SUBSCRIPTION_NAME
+python test/scripts/create_topic.py $RECEIPT_TOPIC_PROJECT_ID $RECEIPT_TOPIC_NAME
+python test/scripts/create_subscription.py $RECEIPT_TOPIC_PROJECT_ID $RECEIPT_TOPIC_NAME $SUBSCRIPTION_NAME
 python run.py
 ```
 
@@ -130,5 +148,5 @@ docker logs casesvc -f
 * In a separate terminal, publish a message to the Pub/Sub emulator:
 ```bash
 pipenv shell
-python test/helpers/publish_message.py $RECEIPT_TOPIC_PROJECT_ID $RECEIPT_TOPIC_NAME
+python test/scripts/publish_message.py $RECEIPT_TOPIC_PROJECT_ID $RECEIPT_TOPIC_NAME
 ```
