@@ -35,9 +35,6 @@ os.environ["SUBSCRIPTION_NAME"] = "rm-receipt-subscription"
 
 
 class CensusRMPubSubComponentTest(TestCase):
-    # callback_called = False
-
-    msg_body = ""
 
     def test_e2e_good(self):
         channel, queue_declare_result = init_rabbitmq()
@@ -45,37 +42,22 @@ class CensusRMPubSubComponentTest(TestCase):
         create_topic(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME)
         create_subscription(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME, SUBSCRIPTION_NAME)
 
-        published_message = publish_to_pubsub(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME)
+        expected_object_id = str(uuid.uuid4())
+        publish_to_pubsub(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME, expected_object_id)
 
         channel, queue_declare_result = init_rabbitmq()
-
-        self.msg_body = ""
-
-        def callback(ch, method, properties, body):
-            print(" [x] %r" % body)
-            self.msg_body = body
-            channel.stop_consuming()
-
         assert queue_declare_result.method.message_count == 1
-        res = channel.basic_get(queue=RABBIT_QUEUE)
+        actual_msg = channel.basic_get(queue=RABBIT_QUEUE)
+        actual_msg_body = actual_msg[2]
 
-        #
-        # channel.basic_consume(callback,
-        #                       queue=RABBIT_QUEUE,
-        #                       no_ack=True)
-        # channel.start_consuming()
-        #
+        expected_msg = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
+                       + '<ns2:caseReceipt xmlns:ns2="http://ons.gov.uk/ctp/response/casesvc/message/feedback">' \
+                       + '<caseId>' + expected_object_id + '</caseId><inboundChannel>OFFLINE</inboundChannel>' \
+                       + '<responseDateTime>2008-08-24T00:00:00+00:00</responseDateTime></ns2:caseReceipt>'
 
-        # while True:
-        #     if self.msg_body == "":
-        #         asyncio.sleep(1)
+        actual_msg_body_str = actual_msg_body.decode('utf-8')
 
-
-
-        expected_msg = b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><ns2:caseReceipt xmlns:ns2="http://ons.gov.uk/ctp/response/casesvc/message/feedback"><caseId>c559e2ad-4be2-4af6-91f9-6f51158ee555</caseId><inboundChannel>OFFLINE</inboundChannel><responseDateTime>2008-08-24T00:00:00+00:00</responseDateTime></ns2:caseReceipt>'
-
-        # TODO Not matching? don't why
-        assert expected_msg == self.msg_body
+        assert expected_msg == actual_msg_body_str
 
 
 def create_topic(a, b):
@@ -113,8 +95,9 @@ def create_subscription(a, b, c):
         print(f'Subscription created: {sub}')
 
 
-def publish_to_pubsub(receipt_topic_project_id, receipt_topic_name):
+def publish_to_pubsub(receipt_topic_project_id, receipt_topic_name, object_id):
     publisher = pubsub_v1.PublisherClient()
+
     try:
         topic_path = publisher.topic_path(receipt_topic_project_id, receipt_topic_name)
     except IndexError:
@@ -127,14 +110,12 @@ def publish_to_pubsub(receipt_topic_project_id, receipt_topic_name):
                                data=data,
                                eventType='OBJECT_FINALIZE',
                                bucketId='123',
-                               objectId=str(uuid.uuid4()))
+                               objectId=object_id)
 
     while not future.done():
         time.sleep(1)
 
     print(f'Message published to {topic_path}')
-
-    return data
 
 
 def init_rabbitmq(rabbitmq_amqp=RABBIT_AMQP,
