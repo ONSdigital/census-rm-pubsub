@@ -8,7 +8,7 @@ RABBIT_EXCHANGE = os.getenv("RABBIT_EXCHANGE", "case-outbound-exchange")
 RABBIT_QUEUE = os.getenv("RABBIT_QUEUE", "Case.Responses")
 RABBIT_ROUTE = os.getenv("RABBIT_ROUTING_KEY", "Case.Responses.binding")
 RABBIT_QUEUE_ARGS = {'x-dead-letter-exchange': 'case-deadletter-exchange',
-                        'x-dead-letter-routing-key': RABBIT_ROUTE}
+                     'x-dead-letter-routing-key': RABBIT_ROUTE}
 
 logger = wrap_logger(logging.getLogger(__name__))
 

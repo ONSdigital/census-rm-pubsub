@@ -1,6 +1,6 @@
 #!/bin/sh
 
-sleep 5s
+sleep 10s
 
 source .env
 

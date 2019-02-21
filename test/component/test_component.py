@@ -1,14 +1,10 @@
-import asyncio
 import time
 import uuid
 from unittest import TestCase
 
 import pika
-from google.api_core.exceptions import AlreadyExists, PermissionDenied
-from google.cloud import pubsub_v1
-
-from test.scripts import create_topic
 from coverage.python import os
+from google.cloud import pubsub_v1
 
 RABBIT_AMQP = "amqp://guest:guest@localhost:35672"
 SUBSCRIPTION_PROJECT_ID = "project"
@@ -25,8 +21,7 @@ RABBIT_QUEUE_ARGS = {'x-dead-letter-exchange': 'case-deadletter-exchange',
 class CensusRMPubSubComponentTest(TestCase):
 
     def setUp(self):
-        # TODO, this os.environ setting is currently needed, it should work for .env file
-        pubsub_host = os.getenv("PUBSUB_EMULATOR_HOST", "Not Found")
+        # TODO, this os.environ setting is currently needed
         os.environ["PUBSUB_EMULATOR_HOST"] = "localhost:8538"
         self.purge_rabbit_queue()
 
@@ -34,16 +29,16 @@ class CensusRMPubSubComponentTest(TestCase):
         expected_object_id = str(uuid.uuid4())
         self.publish_to_pubsub(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME, expected_object_id)
 
-        expected_msg_on_rabbit = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-                                 + '<ns2:caseReceipt xmlns:ns2="http://ons.gov.uk/ctp/response/casesvc/message/feedback">' \
-                                 + '<caseId>' + expected_object_id + '</caseId><inboundChannel>OFFLINE</inboundChannel>' \
-                                 + '<responseDateTime>2008-08-24T00:00:00+00:00</responseDateTime></ns2:caseReceipt>'
+        expected_msg = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
+                       + '<ns2:caseReceipt xmlns:ns2="http://ons.gov.uk/ctp/response/casesvc/message/feedback">' \
+                       + '<caseId>' + expected_object_id + '</caseId><inboundChannel>OFFLINE</inboundChannel>' \
+                       + '<responseDateTime>2008-08-24T00:00:00+00:00</responseDateTime></ns2:caseReceipt>'
 
         channel, queue_declare_result = self.init_rabbitmq()
         assert queue_declare_result.method.message_count == 1
 
         actual_msg_body_str = self.get_msg_body_from_rabbit(channel)
-        assert expected_msg_on_rabbit == actual_msg_body_str
+        assert expected_msg == actual_msg_body_str
 
     def purge_rabbit_queue(self):
         channel, queue_declare_result = self.init_rabbitmq()
