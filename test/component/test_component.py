@@ -26,6 +26,7 @@ class CensusRMPubSubComponentTest(TestCase):
 
     def setUp(self):
         # TODO, this os.environ setting is currently needed, it should work for .env file
+        pubsub_host = os.getenv("PUBSUB_EMULATOR_HOST", "Not Found")
         os.environ["PUBSUB_EMULATOR_HOST"] = "localhost:8538"
         self.purge_rabbit_queue()
 
@@ -34,9 +35,9 @@ class CensusRMPubSubComponentTest(TestCase):
         self.publish_to_pubsub(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME, expected_object_id)
 
         expected_msg_on_rabbit = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-                       + '<ns2:caseReceipt xmlns:ns2="http://ons.gov.uk/ctp/response/casesvc/message/feedback">' \
-                       + '<caseId>' + expected_object_id + '</caseId><inboundChannel>OFFLINE</inboundChannel>' \
-                       + '<responseDateTime>2008-08-24T00:00:00+00:00</responseDateTime></ns2:caseReceipt>'
+                                 + '<ns2:caseReceipt xmlns:ns2="http://ons.gov.uk/ctp/response/casesvc/message/feedback">' \
+                                 + '<caseId>' + expected_object_id + '</caseId><inboundChannel>OFFLINE</inboundChannel>' \
+                                 + '<responseDateTime>2008-08-24T00:00:00+00:00</responseDateTime></ns2:caseReceipt>'
 
         channel, queue_declare_result = self.init_rabbitmq()
         assert queue_declare_result.method.message_count == 1
@@ -51,39 +52,6 @@ class CensusRMPubSubComponentTest(TestCase):
     def get_msg_body_from_rabbit(self, channel):
         actual_msg = channel.basic_get(queue=RABBIT_QUEUE)
         return actual_msg[2].decode('utf-8')
-
-    def create_topic(self, a, b):
-        publisher = pubsub_v1.PublisherClient()
-        try:
-            topic_path = publisher.topic_path(a, b)
-        except IndexError:
-            print('Usage: python create_topic.py PROJECT_ID TOPIC_ID')
-
-        try:
-            topic = publisher.create_topic(topic_path)
-        except AlreadyExists:
-            print('topic already exists')
-        else:
-            print(f'Topic created: {topic}')
-
-    def create_subscription(self, a, b, c):
-        subscriber = pubsub_v1.SubscriberClient()
-        try:
-            topic_path = subscriber.topic_path(a, b)
-            subscription_path = subscriber.subscription_path(a, c)
-        except IndexError:
-            print('Usage: python create_subscription.py PROJECT_ID TOPIC_ID SUBSCRIPTION_ID')
-        except AlreadyExists:
-            print('Subscription already exists')
-
-        try:
-            sub = subscriber.create_subscription(subscription_path, topic_path)
-        except AlreadyExists:
-            print('Subscription already exists')
-        except PermissionDenied:
-            print('Subscription can not be created')
-        else:
-            print(f'Subscription created: {sub}')
 
     def publish_to_pubsub(self, receipt_topic_project_id, receipt_topic_name, object_id):
         publisher = pubsub_v1.PublisherClient()
