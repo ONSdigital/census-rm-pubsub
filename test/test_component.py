@@ -13,7 +13,6 @@ from coverage.python import os
 RABBIT_AMQP = "amqp://guest:guest@localhost:35672"
 SUBSCRIPTION_PROJECT_ID = "project"
 RECEIPT_TOPIC_PROJECT_ID = "project"
-PUBSUB_EMULATOR_HOST = "localhost:8538"
 RABBIT_QUEUE = "Case.Responses"
 RABBIT_EXCHANGE = "case-outbound-exchange"
 RABBIT_ROUTE = "Case.Responses.binding"
@@ -22,110 +21,100 @@ SUBSCRIPTION_NAME = "rm-receipt-subscription"
 RABBIT_QUEUE_ARGS = {'x-dead-letter-exchange': 'case-deadletter-exchange',
                      'x-dead-letter-routing-key': RABBIT_ROUTE}
 
-# TODO, Not really sure why this is important, but blows up without it. Try removing 1 at a time to figure out which and why?
-
-os.environ["RABBIT_AMQP"] = "amqp://guest:guest@localhost:35672"
-os.environ["SUBSCRIPTION_PROJECT_ID"] = "project"
-os.environ["RECEIPT_TOPIC_PROJECT_ID"] = "project"
-os.environ["PUBSUB_EMULATOR_HOST"] = "localhost:8538"
-os.environ["RABBIT_QUEUE"] = "Case.Responses"
-os.environ["RABBIT_EXCHANGE"] = "case-outbound-exchange"
-os.environ["RECEIPT_TOPIC_NAME"] = "eq-submission-topic"
-os.environ["SUBSCRIPTION_NAME"] = "rm-receipt-subscription"
-
 
 class CensusRMPubSubComponentTest(TestCase):
 
+    def setUp(self):
+        # TODO, this os.environ setting is currently needed, it should work for .env file
+        os.environ["PUBSUB_EMULATOR_HOST"] = "localhost:8538"
+        self.purge_rabbit_queue()
+
     def test_e2e_good(self):
-        channel, queue_declare_result = init_rabbitmq()
-        channel.queue_purge(queue=RABBIT_QUEUE)
-        create_topic(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME)
-        create_subscription(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME, SUBSCRIPTION_NAME)
-
         expected_object_id = str(uuid.uuid4())
-        publish_to_pubsub(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME, expected_object_id)
+        self.publish_to_pubsub(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME, expected_object_id)
 
-        channel, queue_declare_result = init_rabbitmq()
-        assert queue_declare_result.method.message_count == 1
-        actual_msg = channel.basic_get(queue=RABBIT_QUEUE)
-        actual_msg_body = actual_msg[2]
-
-        expected_msg = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
+        expected_msg_on_rabbit = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
                        + '<ns2:caseReceipt xmlns:ns2="http://ons.gov.uk/ctp/response/casesvc/message/feedback">' \
                        + '<caseId>' + expected_object_id + '</caseId><inboundChannel>OFFLINE</inboundChannel>' \
                        + '<responseDateTime>2008-08-24T00:00:00+00:00</responseDateTime></ns2:caseReceipt>'
 
-        actual_msg_body_str = actual_msg_body.decode('utf-8')
+        channel, queue_declare_result = self.init_rabbitmq()
+        assert queue_declare_result.method.message_count == 1
 
-        assert expected_msg == actual_msg_body_str
+        actual_msg_body_str = self.get_msg_body_from_rabbit(channel)
+        assert expected_msg_on_rabbit == actual_msg_body_str
 
+    def purge_rabbit_queue(self):
+        channel, queue_declare_result = self.init_rabbitmq()
+        channel.queue_purge(queue=RABBIT_QUEUE)
 
-def create_topic(a, b):
-    publisher = pubsub_v1.PublisherClient()
-    try:
-        topic_path = publisher.topic_path(a, b)
-    except IndexError:
-        print('Usage: python create_topic.py PROJECT_ID TOPIC_ID')
+    def get_msg_body_from_rabbit(self, channel):
+        actual_msg = channel.basic_get(queue=RABBIT_QUEUE)
+        return actual_msg[2].decode('utf-8')
 
-    try:
-        topic = publisher.create_topic(topic_path)
-    except AlreadyExists:
-        print('topic already exists')
-    else:
-        print(f'Topic created: {topic}')
+    def create_topic(self, a, b):
+        publisher = pubsub_v1.PublisherClient()
+        try:
+            topic_path = publisher.topic_path(a, b)
+        except IndexError:
+            print('Usage: python create_topic.py PROJECT_ID TOPIC_ID')
 
+        try:
+            topic = publisher.create_topic(topic_path)
+        except AlreadyExists:
+            print('topic already exists')
+        else:
+            print(f'Topic created: {topic}')
 
-def create_subscription(a, b, c):
-    subscriber = pubsub_v1.SubscriberClient()
-    try:
-        topic_path = subscriber.topic_path(a, b)
-        subscription_path = subscriber.subscription_path(a, c)
-    except IndexError:
-        print('Usage: python create_subscription.py PROJECT_ID TOPIC_ID SUBSCRIPTION_ID')
-    except AlreadyExists:
-        print('Subscription already exists')
+    def create_subscription(self, a, b, c):
+        subscriber = pubsub_v1.SubscriberClient()
+        try:
+            topic_path = subscriber.topic_path(a, b)
+            subscription_path = subscriber.subscription_path(a, c)
+        except IndexError:
+            print('Usage: python create_subscription.py PROJECT_ID TOPIC_ID SUBSCRIPTION_ID')
+        except AlreadyExists:
+            print('Subscription already exists')
 
-    try:
-        sub = subscriber.create_subscription(subscription_path, topic_path)
-    except AlreadyExists:
-        print('Subscription already exists')
-    except PermissionDenied:
-        print('Subscription can not be created')
-    else:
-        print(f'Subscription created: {sub}')
+        try:
+            sub = subscriber.create_subscription(subscription_path, topic_path)
+        except AlreadyExists:
+            print('Subscription already exists')
+        except PermissionDenied:
+            print('Subscription can not be created')
+        else:
+            print(f'Subscription created: {sub}')
 
+    def publish_to_pubsub(self, receipt_topic_project_id, receipt_topic_name, object_id):
+        publisher = pubsub_v1.PublisherClient()
 
-def publish_to_pubsub(receipt_topic_project_id, receipt_topic_name, object_id):
-    publisher = pubsub_v1.PublisherClient()
+        try:
+            topic_path = publisher.topic_path(receipt_topic_project_id, receipt_topic_name)
+        except IndexError:
+            print('Usage: python publish_message.py PROJECT_ID TOPIC_ID')
+            assert False
 
-    try:
-        topic_path = publisher.topic_path(receipt_topic_project_id, receipt_topic_name)
-    except IndexError:
-        print('Usage: python publish_message.py PROJECT_ID TOPIC_ID')
-        assert False
+        data = '{"timeCreated":"2008-08-24T00:00:00Z"}'.encode('utf-8')
 
-    data = '{"timeCreated":"2008-08-24T00:00:00Z"}'.encode('utf-8')
+        future = publisher.publish(topic_path,
+                                   data=data,
+                                   eventType='OBJECT_FINALIZE',
+                                   bucketId='123',
+                                   objectId=object_id)
 
-    future = publisher.publish(topic_path,
-                               data=data,
-                               eventType='OBJECT_FINALIZE',
-                               bucketId='123',
-                               objectId=object_id)
+        while not future.done():
+            time.sleep(1)
 
-    while not future.done():
-        time.sleep(1)
+        print(f'Message published to {topic_path}')
 
-    print(f'Message published to {topic_path}')
-
-
-def init_rabbitmq(rabbitmq_amqp=RABBIT_AMQP,
-                  binding_key=RABBIT_ROUTE,
-                  exchange_name=RABBIT_EXCHANGE,
-                  queue_name=RABBIT_QUEUE,
-                  queue_args=RABBIT_QUEUE_ARGS):
-    rabbitmq_connection = pika.BlockingConnection(pika.URLParameters(rabbitmq_amqp))
-    channel = rabbitmq_connection.channel()
-    channel.exchange_declare(exchange=exchange_name, exchange_type='direct', durable=True)
-    queue_declare_result = channel.queue_declare(queue=queue_name, durable=True, arguments=queue_args)
-    channel.queue_bind(exchange=exchange_name, queue=queue_name, routing_key=binding_key)
-    return channel, queue_declare_result
+    def init_rabbitmq(self, rabbitmq_amqp=RABBIT_AMQP,
+                      binding_key=RABBIT_ROUTE,
+                      exchange_name=RABBIT_EXCHANGE,
+                      queue_name=RABBIT_QUEUE,
+                      queue_args=RABBIT_QUEUE_ARGS):
+        rabbitmq_connection = pika.BlockingConnection(pika.URLParameters(rabbitmq_amqp))
+        channel = rabbitmq_connection.channel()
+        channel.exchange_declare(exchange=exchange_name, exchange_type='direct', durable=True)
+        queue_declare_result = channel.queue_declare(queue=queue_name, durable=True, arguments=queue_args)
+        channel.queue_bind(exchange=exchange_name, queue=queue_name, routing_key=binding_key)
+        return channel, queue_declare_result

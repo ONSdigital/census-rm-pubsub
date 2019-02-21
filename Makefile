@@ -1,3 +1,5 @@
+DOT := $(shell command -v dot 2> /dev/null)
+
 .PHONY: test unit_tests integration_tests
 
 build: install
@@ -11,7 +13,6 @@ test:
 	pipenv run pytest test/
 
 up:
-	docker-compose up;
-	pipenv install --dev
+	docker-compose up -d;
 	./setup_pubsub.sh
 
