@@ -27,7 +27,7 @@ class CensusRMPubSubComponentTest(TestCase):
 
     def test_e2e_good(self):
         expected_object_id = str(uuid.uuid4())
-        self.publish_to_pubsub(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME, expected_object_id)
+        self.publish_to_pubsub(expected_object_id)
 
         expected_msg = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
                        + '<ns2:caseReceipt xmlns:ns2="http://ons.gov.uk/ctp/response/casesvc/message/feedback">' \
@@ -48,14 +48,10 @@ class CensusRMPubSubComponentTest(TestCase):
         actual_msg = channel.basic_get(queue=RABBIT_QUEUE)
         return actual_msg[2].decode('utf-8')
 
-    def publish_to_pubsub(self, receipt_topic_project_id, receipt_topic_name, object_id):
+    def publish_to_pubsub(self, object_id):
         publisher = pubsub_v1.PublisherClient()
 
-        try:
-            topic_path = publisher.topic_path(receipt_topic_project_id, receipt_topic_name)
-        except IndexError:
-            print('Usage: python publish_message.py PROJECT_ID TOPIC_ID')
-            assert False
+        topic_path = publisher.topic_path(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME)
 
         data = '{"timeCreated":"2008-08-24T00:00:00Z"}'.encode('utf-8')
 
