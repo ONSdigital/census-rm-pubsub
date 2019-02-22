@@ -21,7 +21,6 @@ RABBIT_QUEUE_ARGS = {'x-dead-letter-exchange': 'case-deadletter-exchange',
 class CensusRMPubSubComponentTest(TestCase):
 
     def setUp(self):
-        # TODO, this os.environ setting is currently needed
         os.environ["PUBSUB_EMULATOR_HOST"] = "localhost:8538"
         self.purge_rabbit_queue()
 

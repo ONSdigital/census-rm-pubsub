@@ -14,7 +14,8 @@ install:
 
 script:
   - pipenv check
-  - pipenv run pytest test/
+  - make install
+  - make test
 
 after_success:
 - if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
