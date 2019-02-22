@@ -1,6 +1,6 @@
 DOT := $(shell command -v dot 2> /dev/null)
 
-.PHONY: test unit_tests integration_tests
+
 
 build: install
 
