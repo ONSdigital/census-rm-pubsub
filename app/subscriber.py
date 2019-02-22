@@ -29,32 +29,43 @@ def receipt_to_case(message: Message):
     NB: any exceptions raised by this callback should nack the message by the future manager
     :param message: a GCP pubsub subscriber Message
     """
+    log = logger.bind(message_id=message.message_id,
+                      subscription_name=SUBSCRIPTION_NAME,
+                      subscription_project=SUBSCRIPTION_PROJECT_ID)
     try:
         if message.attributes['eventType'] != 'OBJECT_FINALIZE':  # receipt only on object creation
-            logger.error('Unknown Pub/Sub Message eventType', eventType=message.attributes['eventType'])
+            log.error('Unknown Pub/Sub Message eventType', eventType=message.attributes['eventType'])
             return
         bucket_name, object_name = message.attributes['bucketId'], message.attributes['objectId']
+    except KeyError as e:
+        log.error('Pub/Sub Message missing required attribute(s)', missing_attribute=e.args[0])
+        return
+    else:
+        log = log.bind(bucket_name=bucket_name, object_name=object_name)
+        log.info('Pub/Sub Message received for processing')
+    try:
         payload = json.loads(message.data)  # parse metadata as JSON payload
+    except json.JSONDecodeError:
+        log.error('Pub/Sub Message data not JSON')
+        return
+    try:
         metadata = payload['metadata']
         case_id, tx_id, created = metadata['case_id'], metadata['tx_id'], payload['timeCreated']
     except KeyError as e:
-        logger.error('Pub/Sub Message missing required data', missing=e.args[0])
+        log.error('Pub/Sub Message missing required data', missing_json_key=e.args[0])
         return
+    else:
+        log = log.bind(case_id=case_id, created=created, tx_id=tx_id)
 
     time_obj_created = parse_datetime(created).isoformat()
-
-    logger.info('Pub/Sub Message received for processing',
-                bucket_name=bucket_name,
-                message_id=message.message_id,
-                object_name=object_name,
-                case_id=case_id,
-                tx_id=tx_id)
 
     xml_message = jinja_template.render(case_id=case_id,
                                         inbound_channel='OFFLINE',  # TODO: Hardcoded to OFFLINE for all response types
                                         response_datetime=time_obj_created)
     send_message_to_rabbitmq(xml_message)
     message.ack()
+
+    log.info('Message processing complete')
 
 
 def setup_subscription(subscription_name=SUBSCRIPTION_NAME,
