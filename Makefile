@@ -14,7 +14,7 @@ test: unit_tests component_tests
 unit_tests:
 	pipenv run pytest test/unit/
 
-component_tests: docker_build
+component_tests:
 	docker-compose up -d ;
 	./test/component/setup_pubsub.sh
 	pipenv run pytest test/component/
