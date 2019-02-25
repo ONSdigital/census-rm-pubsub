@@ -39,7 +39,7 @@ class CensusRMPubSubComponentTest(TestCase):
         assert queue_declare_result.method.message_count == 1, "Expected 1 msg to be on rabbitmq queue"
 
         actual_msg_body_str = self.get_msg_body_from_rabbit(channel)
-        assert expected_msg == actual_msg_body_str, "Msg text incorrect"
+        assert expected_msg == actual_msg_body_str, "RabbitMQ message text incorrect"
 
     def purge_rabbit_queue(self):
         channel, queue_declare_result = self.init_rabbitmq()
