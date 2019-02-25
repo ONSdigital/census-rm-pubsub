@@ -1,7 +1,5 @@
 #!/bin/sh
 
-sleep 10s
-
 source .env
 
 echo 'Running setup_pubsub.sh'

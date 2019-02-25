@@ -10,6 +10,7 @@ SUBSCRIPTION_PROJECT_ID = 'test-project-id'
 
 
 class TestSubscriber(TestCase):
+    case_id = 'e079cea4-1447-4529-aa70-8757f1806f60'
     gcp_bucket = 'test-bucket'
     gcp_object_id = 'test-object'
     subscriber_future = 'test-future'
@@ -51,14 +52,21 @@ class TestSubscriber(TestCase):
             mock_message.data = self.test_data
 
             with patch('app.subscriber.json') as mock_json:
-                payload = {'timeCreated': '2018-08-24T00:00:00Z'}
+                payload = {
+                    'timeCreated': '2018-08-24T00:00:00Z',
+                    'metadata': {
+                        'tx_id': self.gcp_object_id,
+                        'case_id': self.case_id,
+                    }
+                }
                 mock_json.loads = create_stub_function(self.test_data, return_value=payload)
 
                 receipt_to_case(mock_message)
 
                 expected_msg = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
                                '<ns2:caseReceipt xmlns:ns2="http://ons.gov.uk/ctp/response/casesvc/message/feedback">' \
-                               '<caseId>test-object</caseId><inboundChannel>OFFLINE</inboundChannel>' \
+                               f'<caseId>{ self.case_id }</caseId>' \
+                               '<inboundChannel>OFFLINE</inboundChannel>' \
                                '<responseDateTime>2018-08-24T00:00:00+00:00</responseDateTime></ns2:caseReceipt>'
 
                 mock_send_message_to_rabbit_mq.assert_called_once_with(expected_msg)
