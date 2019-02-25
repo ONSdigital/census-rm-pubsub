@@ -19,7 +19,7 @@ services:
     command: start --host-port 0.0.0.0:8538
 
   pubsub:
-    container_name: census-pubsub
+    container_name: pubsub
     image: census-rm-pubsub:latest
     external_links:
       - pubsub-emulator
