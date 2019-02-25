@@ -36,10 +36,10 @@ class CensusRMPubSubComponentTest(TestCase):
         )
 
         channel, queue_declare_result = self.init_rabbitmq()
-        assert queue_declare_result.method.message_count == 1, "Expected 1 msg to be on rabbitmq queue"
+        assert queue_declare_result.method.message_count == 1, "Expected 1 message to be on rabbitmq queue"
 
         actual_msg_body_str = self.get_msg_body_from_rabbit(channel)
-        assert expected_msg == actual_msg_body_str, "Msg text incorrect"
+        assert expected_msg == actual_msg_body_str, "RabbitMQ message text incorrect"
 
     def purge_rabbit_queue(self):
         channel, queue_declare_result = self.init_rabbitmq()
@@ -52,11 +52,7 @@ class CensusRMPubSubComponentTest(TestCase):
     def publish_to_pubsub(self, tx_id, case_id):
         publisher = pubsub_v1.PublisherClient()
 
-        try:
-            topic_path = publisher.topic_path(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME)
-        except IndexError:
-            print('Usage: python publish_message.py PROJECT_ID TOPIC_ID')
-            return
+        topic_path = publisher.topic_path(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME)
 
         data = json.dumps({
             "timeCreated": "2008-08-24T00:00:00Z",
