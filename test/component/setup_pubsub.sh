@@ -4,7 +4,7 @@ echo 'Running setup_pubsub.sh'
 
 wait_for_curl_success() {
     local healthcheck_url=${1}
-    local http_verb=$2
+    local http_verb=${2}
     local service_name=${3}
 
     echo "Waiting for [$service_name] to be ready"
@@ -20,7 +20,7 @@ wait_for_curl_success() {
         sleep 1s
     done
 
-	echo "[$service_name] is ready"
+    echo "[$service_name] is ready"
 }
 
 wait_for_curl_success "http://localhost:8539/v1/projects/project/topics/eq-submission-topic" "PUT" "pubsub_emulator topic"
@@ -34,12 +34,12 @@ echo "Waiting for [pubsub] to be ready"
 while true; do
     response=$(docker inspect census-pubsub -f "{{ .State.Health.Status }}")
     if [[ "$response" == "healthy" ]]; then
-    	echo "[pubsub] is ready"
-    	break
-	fi
+        echo "[pubsub] is ready"
+        break
+    fi
 
-	echo "[pubsub] not ready ([$response] is its current state)"
-	sleep 1s
+    echo "[pubsub] not ready ([$response] is its current state)"
+    sleep 1s
 done
 
 echo "Containers running and alive"
