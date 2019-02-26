@@ -20,7 +20,7 @@ RABBIT_QUEUE_ARGS = {'x-dead-letter-exchange': 'case-deadletter-exchange',
 class CensusRMPubSubComponentTest(TestCase):
 
     def setUp(self):
-        os.environ["PUBSUB_EMULATOR_HOST"] = "localhost:8538"
+        os.environ["PUBSUB_EMULATOR_HOST"] = "localhost:8539"
         self.purge_rabbit_queue()
 
     def test_e2e_with_sucessful_msg(self):

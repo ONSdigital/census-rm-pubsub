@@ -18,6 +18,7 @@ component_tests: docker_build
 	docker-compose up -d ;
 	./test/component/setup_pubsub.sh
 	pipenv run pytest test/component/
+	docker-compose down
 
 up: docker_build
 	docker-compose up -d;
@@ -27,4 +28,4 @@ down:
 	docker-compose down
 
 docker_build:
-	docker build -t census-rm-pubsub:latest .
+	docker build -t eu.gcr.io/census-ci/rm/census-rm-pubsub:latest .
