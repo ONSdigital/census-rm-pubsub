@@ -3,21 +3,21 @@ import os
 import pika
 from structlog import wrap_logger
 
-RM_RABBIT_AMQP = os.getenv("RABBIT_AMQP", "amqp://guest:guest@localhost:6672")
-RM_RABBIT_EXCHANGE = os.getenv("RABBIT_EXCHANGE", "case-outbound-exchange")
-RM_RABBIT_QUEUE = os.getenv("RABBIT_QUEUE", "Case.Responses")
-RM_RABBIT_ROUTE = os.getenv("RABBIT_ROUTING_KEY", "Case.Responses.binding")
-RM_RABBIT_QUEUE_ARGS = {'x-dead-letter-exchange': 'case-deadletter-exchange',
-                        'x-dead-letter-routing-key': RM_RABBIT_ROUTE}
+RABBIT_AMQP = os.getenv("RABBIT_AMQP", "amqp://guest:guest@localhost:6672")
+RABBIT_EXCHANGE = os.getenv("RABBIT_EXCHANGE", "case-outbound-exchange")
+RABBIT_QUEUE = os.getenv("RABBIT_QUEUE", "Case.Responses")
+RABBIT_ROUTE = os.getenv("RABBIT_ROUTING_KEY", "Case.Responses.binding")
+RABBIT_QUEUE_ARGS = {'x-dead-letter-exchange': 'case-deadletter-exchange',
+                     'x-dead-letter-routing-key': RABBIT_ROUTE}
 
 logger = wrap_logger(logging.getLogger(__name__))
 
 
-def init_rabbitmq(rabbitmq_amqp=RM_RABBIT_AMQP,
-                  binding_key=RM_RABBIT_ROUTE,
-                  exchange_name=RM_RABBIT_EXCHANGE,
-                  queue_name=RM_RABBIT_QUEUE,
-                  queue_args=RM_RABBIT_QUEUE_ARGS):
+def init_rabbitmq(rabbitmq_amqp=RABBIT_AMQP,
+                  binding_key=RABBIT_ROUTE,
+                  exchange_name=RABBIT_EXCHANGE,
+                  queue_name=RABBIT_QUEUE,
+                  queue_args=RABBIT_QUEUE_ARGS):
     """
     Initialise connection to rabbitmq
 
@@ -37,9 +37,9 @@ def init_rabbitmq(rabbitmq_amqp=RM_RABBIT_AMQP,
 
 
 def send_message_to_rabbitmq(message,
-                             rabbitmq_amqp=RM_RABBIT_AMQP,
-                             exchange_name=RM_RABBIT_EXCHANGE,
-                             routing_key=RM_RABBIT_ROUTE):
+                             rabbitmq_amqp=RABBIT_AMQP,
+                             exchange_name=RABBIT_EXCHANGE,
+                             routing_key=RABBIT_ROUTE):
     """
     Send message to rabbitmq
 
@@ -58,4 +58,5 @@ def send_message_to_rabbitmq(message,
                                    body=str(message),
                                    properties=pika.BasicProperties(content_type='text/xml'))
     logger.info('Message successfully sent to rabbitmq', exchange=exchange_name, route=routing_key)
+
     rabbitmq_connection.close()

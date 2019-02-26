@@ -155,3 +155,15 @@ docker logs casesvc -f
 pipenv shell
 python test/scripts/publish_message.py $RECEIPT_TOPIC_PROJECT_ID $RECEIPT_TOPIC_NAME
 ```
+
+## Running component tests (and unit tests)
+To run the component tests kill and remove any conflicting docker containers census-pubsub, pubsub & rabbitmq.
+If you have container clashes you will have to kill off other containers.
+To run the tests
+```bash
+make test
+make down
+```
+
+This should successfully run the unit tests, build the latest census-rm-pubsub image, bring up rabbitmq, pubsub-emulator and 
+census-rm-pubsub and then run the component tests on them.  'make down' will remove the containers if required.
