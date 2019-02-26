@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+
+echo 'Running setup_pubsub.sh'
 
 wait_for_curl_success() {
     echo "Waiting for: " "$3" " to be ready"
@@ -20,7 +22,6 @@ wait_for_curl_success() {
         sleep 1s
     done
 }
-echo 'Running setup_pubsub.sh'
 
 echo "Calling check for pubsub_emualator to be ready"
 wait_for_curl_success "http://localhost:8538/v1/projects/project/topics/eq-submission-topic" "PUT" "pubsub_emulator topic"
@@ -45,4 +46,4 @@ while true; do
     break
 done
 
-echo 'containers running and alive'
+echo 'containers running and healthy'
