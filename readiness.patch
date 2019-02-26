@@ -1,0 +1,109 @@
+diff --git a/Makefile b/Makefile
+index ab4ceea..46c7e0b 100644
+--- a/Makefile
++++ b/Makefile
+@@ -2,12 +2,16 @@ DOT := $(shell command -v dot 2> /dev/null)
+ 
+ build: install
+ 
++package_vulnerability:
++	pipenv check
++
++flake:
++	pipenv run flake8 .
++
+ install:
+ 	pipenv install --dev
+ 
+-test: unit_tests component_tests
+-	pipenv check
+-	pipenv run flake8 .
++test: package_vulnerability flake unit_tests component_tests
+ 
+ unit_tests:
+ 	pipenv run pytest test/unit/
+diff --git a/docker-compose.yml b/docker-compose.yml
+index 7483759..14cad48 100644
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -23,6 +23,8 @@ services:
+       - pubsub-emulator
+       - rabbitmq
+     restart: always
++    healthcheck:
++      test: bash -c "[ -f /app/pubsub-ready ]"
+     environment:
+     - RABBIT_AMQP=amqp://guest:guest@rabbitmq:5672
+     - SUBSCRIPTION_PROJECT_ID=project
+diff --git a/test/component/setup_pubsub.sh b/test/component/setup_pubsub.sh
+index e361088..422fd4d 100755
+--- a/test/component/setup_pubsub.sh
++++ b/test/component/setup_pubsub.sh
+@@ -3,47 +3,45 @@
+ echo 'Running setup_pubsub.sh'
+ 
+ wait_for_curl_success() {
+-    echo "Waiting for: " "$3" " to be ready"
++    echo "Waiting for [$3] to be ready"
+ 
+     while true; do
++
+         response=$(curl -X $2 --write-out %{http_code} --silent --output /dev/null $1)
+ 
+         if [[ response -eq 200 ]]; then
+-            echo "$3" " ready"
+-            break
++          break
+         fi
+ 
+         if [[ response -eq 409 ]]; then
+-            echo "$3" " already ready 409 means already exists? is this ok for testing, not 'pure'"
+-            break
++          break
+         fi
+ 
+-        echo "$3" "not ready" "$response" "was the response"
++        echo "[$3] not ready ([$response] was the response from curl)"
+         sleep 1s
+     done
++
++	echo "[$3] is ready"
+ }
+ 
+-echo "Calling check for pubsub_emualator to be ready"
+ wait_for_curl_success "http://localhost:8538/v1/projects/project/topics/eq-submission-topic" "PUT" "pubsub_emulator topic"
+ 
+-echo 'setting up subscription to topic'
++
++echo "Setting up subscription to topic..."
+ curl -X PUT http://localhost:8538/v1/projects/project/subscriptions/rm-receipt-subscription -H 'Content-Type: application/json' -d '{"topic": "projects/project/topics/eq-submission-topic"}'
+ 
+-echo "Calling check for rabbitmq to be be ready"
+ wait_for_curl_success "http://guest:guest@localhost:46672/api/aliveness-test/%2F" "GET" "rabbit_mq"
+ 
+-echo "Waiting for census pubsub to be ready"
++echo "Waiting for [pubsub] to be ready"
+ while true; do
+-    docker cp pubsub:/app/pubsub-ready .
+-
+-    if [[ ! -f pubsub-ready ]]; then
+-        echo "File not found! pubsub-ready"
+-        sleep 1s
+-        continue
+-    fi
+-
+-    echo "census-pubsub ready"
+-    break
++    response=$(docker inspect pubsub -f "{{ .State.Health.Status }}")
++    if [[ "$response" == "healthy" ]]; then
++    	echo "[pubsub] is ready"
++    	break
++	fi
++
++	echo "[pubsub] not ready ([$response] is its current state)"
++	sleep 1s
+ done
+ 
+-echo 'containers running and healthy'
+\ No newline at end of file
++echo "Containers running and alive"

@@ -2,12 +2,16 @@ DOT := $(shell command -v dot 2> /dev/null)
 
 build: install
 
+package_vulnerability:
+	pipenv check
+
+flake:
+	pipenv run flake8 .
+
 install:
 	pipenv install --dev
 
-test: unit_tests component_tests
-	pipenv check
-	pipenv run flake8 .
+test: package_vulnerability flake unit_tests component_tests
 
 unit_tests:
 	pipenv run pytest test/unit/

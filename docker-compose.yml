@@ -23,6 +23,9 @@ services:
       - pubsub-emulator
       - rabbitmq
     restart: always
+    healthcheck:
+      test: bash -c "[ -f /app/pubsub-ready ]"
+      interval: 5s
     environment:
     - RABBIT_AMQP=amqp://guest:guest@rabbitmq:5672
     - SUBSCRIPTION_PROJECT_ID=project
