@@ -3,6 +3,7 @@ import os
 import pika
 from structlog import wrap_logger
 
+
 RABBIT_AMQP = os.getenv("RABBIT_AMQP", "amqp://guest:guest@localhost:6672")
 RABBIT_EXCHANGE = os.getenv("RABBIT_EXCHANGE", "case-outbound-exchange")
 RABBIT_QUEUE = os.getenv("RABBIT_QUEUE", "Case.Responses")

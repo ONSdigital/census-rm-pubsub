@@ -38,14 +38,14 @@ def receipt_to_case(message: Message):
             return
         bucket_name, object_name = message.attributes['bucketId'], message.attributes['objectId']
     except KeyError as e:
-        log.error('Pub/Sub Message missing required attribute(s)', missing_attribute=e.args[0])
+        log.error('Pub/Sub Message missing required attribute', missing_attribute=e.args[0])
         return
     else:
         log = log.bind(bucket_name=bucket_name, object_name=object_name)
         log.info('Pub/Sub Message received for processing')
     try:
         payload = json.loads(message.data)  # parse metadata as JSON payload
-    except json.JSONDecodeError:
+    except (TypeError, json.JSONDecodeError):
         log.error('Pub/Sub Message data not JSON')
         return
     try:
