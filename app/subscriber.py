@@ -40,9 +40,10 @@ def receipt_to_case(message: Message):
     except KeyError as e:
         log.error('Pub/Sub Message missing required attribute', missing_attribute=e.args[0])
         return
-    else:
-        log = log.bind(bucket_name=bucket_name, object_name=object_name)
-        log.info('Pub/Sub Message received for processing')
+
+    log = log.bind(bucket_name=bucket_name, object_name=object_name)
+    log.info('Pub/Sub Message received for processing')
+
     try:
         payload = json.loads(message.data)  # parse metadata as JSON payload
     except (TypeError, json.JSONDecodeError):
@@ -54,8 +55,8 @@ def receipt_to_case(message: Message):
     except KeyError as e:
         log.error('Pub/Sub Message missing required data', missing_json_key=e.args[0])
         return
-    else:
-        log = log.bind(case_id=case_id, created=created, tx_id=tx_id)
+
+    log = log.bind(case_id=case_id, created=created, tx_id=tx_id)
 
     time_obj_created = parse_datetime(created).isoformat()
 
