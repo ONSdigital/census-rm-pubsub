@@ -14,6 +14,7 @@ class TestSubscriber(TestCase):
     subscription_project_id = 'test-project-id'
     case_id = 'e079cea4-1447-4529-aa70-8757f1806f60'
     created = '2008-08-24T00:00:00Z'
+    parsed_created = '2008-08-24T00:00:00+00:00'
     gcp_bucket = 'test-bucket'
     gcp_object_id = 'test-object'
     subscriber_future = 'test-future'
@@ -109,11 +110,13 @@ class TestSubscriber(TestCase):
             {"metadata": {"tx_id": "1", "case_id": self.case_id}, "timeCreated": self.created})
         mock_message.message_id = str(uuid.uuid4())
 
+        create_stub_function(self.created, return_value=self.parsed_created)
+
         expected_log_event = 'Message processing complete'
         expected_log_kwargs = {
             'bucket_name': self.gcp_bucket,
             'case_id': self.case_id,
-            'created': self.created,
+            'created': self.parsed_created,
             'tx_id': '1',
             'object_name': self.gcp_object_id,
             'subscription_name': self.subscription_name,
@@ -353,6 +356,32 @@ class TestSubscriber(TestCase):
             'subscription_project': self.subscription_project_id,
             'message_id': mock_message.message_id,
             'missing_json_key': 'timeCreated',
+        }
+
+        from app.subscriber import receipt_to_case
+
+        with self.checkExpectedLogLine('ERROR', expected_log_event, expected_log_kwargs):
+            receipt_to_case(mock_message)
+
+        mock_send_message_to_rabbit_mq.assert_not_called()
+        mock_message.ack.assert_not_called()
+
+    @patch('app.subscriber.send_message_to_rabbitmq')
+    def test_receipt_to_case_timeCreated_valueerror(self, mock_send_message_to_rabbit_mq):
+        mock_message = MagicMock()
+        mock_message.message_id = str(uuid.uuid4())
+        mock_message.attributes = {'eventType': 'OBJECT_FINALIZE',
+                                   'bucketId': self.gcp_bucket,
+                                   'objectId': self.gcp_object_id}
+        mock_message.data = json.dumps({"metadata": {"tx_id": "1", "case_id": "2"}, "timeCreated": "123"})
+
+        expected_log_event = 'Pub/Sub Message has invalid RFC 3339 timeCreated datetime string'
+        expected_log_kwargs = {
+            'bucket_name': self.gcp_bucket,
+            'object_name': self.gcp_object_id,
+            'subscription_name': self.subscription_name,
+            'subscription_project': self.subscription_project_id,
+            'message_id': mock_message.message_id,
         }
 
         from app.subscriber import receipt_to_case

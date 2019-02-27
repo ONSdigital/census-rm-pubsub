@@ -46,19 +46,20 @@ def receipt_to_case(message: Message):
 
     try:
         payload = json.loads(message.data)  # parse metadata as JSON payload
+        metadata = payload['metadata']
+        case_id, tx_id = metadata['case_id'], metadata['tx_id']
+        time_obj_created = parse_datetime(payload['timeCreated']).isoformat()
     except (TypeError, json.JSONDecodeError):
         log.error('Pub/Sub Message data not JSON')
         return
-    try:
-        metadata = payload['metadata']
-        case_id, tx_id, created = metadata['case_id'], metadata['tx_id'], payload['timeCreated']
     except KeyError as e:
         log.error('Pub/Sub Message missing required data', missing_json_key=e.args[0])
         return
+    except ValueError:
+        log.error('Pub/Sub Message has invalid RFC 3339 timeCreated datetime string')
+        return
 
-    log = log.bind(case_id=case_id, created=created, tx_id=tx_id)
-
-    time_obj_created = parse_datetime(created).isoformat()
+    log = log.bind(case_id=case_id, created=time_obj_created, tx_id=tx_id)
 
     xml_message = jinja_template.render(case_id=case_id,
                                         inbound_channel='OFFLINE',  # TODO: Hardcoded to OFFLINE for all response types
