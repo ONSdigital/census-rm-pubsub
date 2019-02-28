@@ -16,11 +16,16 @@ services:
 
   pubsub:
     container_name: census-pubsub
-    image: eu.gcr.io/census-ci/rm/census-rm-pubsub
+    build: .
+    volumes:
+      - /app
     external_links:
       - pubsub-emulator
       - rabbitmq
     restart: always
+    healthcheck:
+      test: bash -c "[ -f /app/pubsub-ready ]"
+      interval: 5s
     environment:
     - RABBIT_AMQP=amqp://guest:guest@rabbitmq-census-pubsub:5672
     - SUBSCRIPTION_PROJECT_ID=project

@@ -19,7 +19,7 @@ unit_tests:
 unit_test_coverage:
 	pipenv run pytest test/unit/ --cov app --cov-report html
 
-component_tests: docker_build
+component_tests:
 	docker-compose up -d ;
 	./test/component/setup_pubsub.sh
 	pipenv run pytest test/component/
