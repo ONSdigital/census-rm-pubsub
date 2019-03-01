@@ -17,7 +17,7 @@ unit_tests:
 	pipenv run pytest test/unit/
 
 unit_test_coverage:
-	pipenv run pytest test/unit/ --cov app --cov-report html
+	pipenv run pytest test/unit/ --cov app --cov-report html --cov-report term-missing
 
 component_tests:
 	docker-compose up -d ;
