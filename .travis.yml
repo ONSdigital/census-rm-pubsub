@@ -13,15 +13,18 @@ install:
   - pipenv install --dev --deploy
 
 script:
-  - make install
-  - make test
+  - make package_vulnerability
+  - make flake
+  - make unit_test_coverage
+  - make component_tests
 
 after_success:
-- if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
-  docker build -t "$DESTINATION_IMAGE_NAME" .;
-  docker login -u "${DOCKER_GCP_USERNAME}" -p "${DOCKER_GCP_PASSWORD}" "${DOCKER_GCP_REGISTRY}";
-  docker push "$DESTINATION_IMAGE_NAME";
-  fi
+  - pipenv run codecov
+  - if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+    docker build -t "$DESTINATION_IMAGE_NAME" .;
+    docker login -u "${DOCKER_GCP_USERNAME}" -p "${DOCKER_GCP_PASSWORD}" "${DOCKER_GCP_REGISTRY}";
+    docker push "$DESTINATION_IMAGE_NAME";
+    fi
 
 env:
   global:
