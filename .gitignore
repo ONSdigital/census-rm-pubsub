@@ -5,6 +5,7 @@ coverage
 docs
 tmp_eq_docker_dev
 tmp_ras_rm_docker_dev
+pubsub-ready
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
