@@ -9,7 +9,6 @@ from test import create_stub_function
 
 
 class TestSubscriber(TestCase):
-
     subscription_name = 'test-subscription'
     subscription_project_id = 'test-project-id'
     case_id = 'e079cea4-1447-4529-aa70-8757f1806f60'
@@ -35,8 +34,8 @@ class TestSubscriber(TestCase):
             message_json = json.loads(record.message)
             try:
                 if (
-                    event in message_json.get('event', '')
-                    and all(message_json[key] == val for key, val in kwargs.items())
+                        event in message_json.get('event', '')
+                        and all(message_json[key] == val for key, val in kwargs.items())
                 ):
                     break
             except KeyError as e:
@@ -124,11 +123,10 @@ class TestSubscriber(TestCase):
             'message_id': mock_message.message_id
         }
 
-        expected_rabbit_message = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
-                                  '<ns2:caseReceipt xmlns:ns2="http://ons.gov.uk/ctp/response/casesvc/message/feedback">' \
-                                  f'<caseId>{self.case_id}</caseId>' \
-                                  '<inboundChannel>OFFLINE</inboundChannel>' \
-                                  '<responseDateTime>2008-08-24T00:00:00+00:00</responseDateTime></ns2:caseReceipt>'
+        expected_rabbit_message = json.dumps({'tx_id': '1',
+                                              'case_id': self.case_id,
+                                              'response_datetime': '2008-08-24T00:00:00+00:00',
+                                              'inbound_channel': 'OFFLINE'})
 
         from app.subscriber import receipt_to_case
 

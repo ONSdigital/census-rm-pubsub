@@ -2,7 +2,6 @@ import json
 import logging
 import os
 
-import jinja2
 from google.cloud.pubsub_v1 import SubscriberClient
 from google.cloud.pubsub_v1.subscriber.message import Message
 from rfc3339 import parse_datetime
@@ -17,9 +16,6 @@ SUBSCRIPTION_PROJECT_ID = os.getenv("SUBSCRIPTION_PROJECT_ID")
 
 logger = wrap_logger(logging.getLogger(__name__))
 client = SubscriberClient()
-
-env = jinja2.Environment(loader=jinja2.FileSystemLoader(["app/templates"]))
-jinja_template = env.get_template("message_template.xml")
 
 
 def receipt_to_case(message: Message):
@@ -61,10 +57,9 @@ def receipt_to_case(message: Message):
 
     log = log.bind(case_id=case_id, created=time_obj_created, tx_id=tx_id)
 
-    xml_message = jinja_template.render(case_id=case_id,
-                                        inbound_channel='OFFLINE',  # TODO: Hardcoded to OFFLINE for all response types
-                                        response_datetime=time_obj_created)
-    send_message_to_rabbitmq(xml_message)
+    metadata['response_datetime'] = time_obj_created
+    metadata['inbound_channel'] = 'OFFLINE'
+    send_message_to_rabbitmq(json.dumps(metadata))
     message.ack()
 
     log.info('Message processing complete')

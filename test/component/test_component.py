@@ -7,6 +7,7 @@ import pika
 from coverage.python import os
 from google.cloud import pubsub_v1
 
+
 RABBIT_AMQP = "amqp://guest:guest@localhost:35672"
 RECEIPT_TOPIC_PROJECT_ID = "project"
 RABBIT_QUEUE = "Case.Responses"
@@ -28,12 +29,10 @@ class CensusRMPubSubComponentTest(TestCase):
         expected_tx_id = str(uuid.uuid4())
         self.publish_to_pubsub(expected_tx_id, expected_case_id)
 
-        expected_msg = (
-            f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            f'<ns2:caseReceipt xmlns:ns2="http://ons.gov.uk/ctp/response/casesvc/message/feedback">'
-            f'<caseId>{expected_case_id}</caseId><inboundChannel>OFFLINE</inboundChannel>'
-            f'<responseDateTime>2008-08-24T00:00:00+00:00</responseDateTime></ns2:caseReceipt>'
-        )
+        expected_msg = json.dumps({'case_id': expected_case_id,
+                                   'tx_id': expected_tx_id,
+                                   'response_datetime': '2008-08-24T00:00:00+00:00',
+                                   'inbound_channel': 'OFFLINE'})
 
         channel, queue_declare_result = self.init_rabbitmq()
         assert queue_declare_result.method.message_count == 1, "Expected 1 message to be on rabbitmq queue"
