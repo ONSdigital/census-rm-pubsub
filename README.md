@@ -11,7 +11,11 @@
 	```bash
 	GOOGLE_APPLICATION_CREDENTIALS
 	LOG_LEVEL
-	RABBIT_AMQP
+	RABBIT_HOST
+	RABBIT_PORT
+	RABBIT_VIRTUALHOST
+	RABBIT_USERNAME
+	RABBIT_PASSWORD
 	RABBIT_QUEUE
 	RABBIT_EXCHANGE
 	RABBIT_ROUTE
@@ -65,7 +69,11 @@ cd ras-rm-docker-dev && make up
 * Create `.env` file in census-rm-pubsub directory:
 ```bash
 cat > .env << EOS
-RABBIT_AMQP=amqp://guest:guest@localhost:6672
+RABBIT_HOST=localhost
+RABBIT_PORT=6672
+RABBIT_VIRTUALHOST=/
+RABBIT_USERNAME=guest
+RABBIT_PASSWORD=guest
 SUBSCRIPTION_PROJECT_ID=[SUB_PROJECT_ID]
 RECEIPT_TOPIC_PROJECT_ID=[TOPIC_PROJECT_ID]
 GOOGLE_APPLICATION_CREDENTIALS=[/path/to/service/account/key.json]
@@ -122,7 +130,11 @@ export PUBSUB_EMULATOR_HOST=::1:8410
 * Create `.env` file in census-rm-pubsub directory:
 ```bash
 cat > .env << EOS
-RABBIT_AMQP=amqp://guest:guest@localhost:6672  # taken from ras-rm-docker-dev
+RABBIT_HOST=localhost
+RABBIT_PORT=6672
+RABBIT_VIRTUALHOST=/
+RABBIT_USERNAME=guest
+RABBIT_PASSWORD=guest
 SUBSCRIPTION_PROJECT_ID=project  # can be anything
 RECEIPT_TOPIC_PROJECT_ID=project  # can be anything
 PUBSUB_EMULATOR_HOST=localhost:8410  # taken from the env-init (above)
