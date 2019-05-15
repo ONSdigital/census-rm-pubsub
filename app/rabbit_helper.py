@@ -26,7 +26,6 @@ def init_rabbitmq(binding_key=RABBIT_ROUTE,
     """
     Initialise connection to rabbitmq
 
-    :param parameters: The CollectionParameters for the connection
     :param exchange_name: The rabbitmq exchange to publish to, (e.g.: "case-outbound-exchange")
     :param queue_name: The rabbitmq queue that subscribes to the exchange, (e.g.: "Case.Responses")
     :param binding_key: The binding key to associate the exchange and queue (e.g.: "Case.Responses.binding")
