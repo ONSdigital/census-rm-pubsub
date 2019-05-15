@@ -17,7 +17,7 @@ services:
   pubsub:
     container_name: census-pubsub
     build: .
-    image: eu.gcr.io/census-ci/rm/census-rm-pubsub:latest
+    image: eu.gcr.io/census-rm-ci/rm/census-rm-pubsub:latest
     volumes:
       - /app
     external_links:
