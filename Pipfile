@@ -7,7 +7,6 @@ name = "pypi"
 google-cloud-pubsub = "*"
 grpcio = "*"
 structlog = "*"
-"jinja2" = "*"
 "tonyg-rfc3339" = "*"
 pika = "*"
 

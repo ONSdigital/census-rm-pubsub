@@ -7,6 +7,7 @@ import pika
 from coverage.python import os
 from google.cloud import pubsub_v1
 
+
 RABBIT_AMQP = "amqp://guest:guest@localhost:35672"
 RECEIPT_TOPIC_PROJECT_ID = "project"
 RABBIT_QUEUE = "Case.Responses"
@@ -26,14 +27,14 @@ class CensusRMPubSubComponentTest(TestCase):
     def test_e2e_with_sucessful_msg(self):
         expected_case_id = str(uuid.uuid4())
         expected_tx_id = str(uuid.uuid4())
-        self.publish_to_pubsub(expected_tx_id, expected_case_id)
+        expected_q_id = str(uuid.uuid4())
+        self.publish_to_pubsub(expected_tx_id, expected_case_id, expected_q_id)
 
-        expected_msg = (
-            f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            f'<ns2:caseReceipt xmlns:ns2="http://ons.gov.uk/ctp/response/casesvc/message/feedback">'
-            f'<caseId>{expected_case_id}</caseId><inboundChannel>OFFLINE</inboundChannel>'
-            f'<responseDateTime>2008-08-24T00:00:00+00:00</responseDateTime></ns2:caseReceipt>'
-        )
+        expected_msg = json.dumps({'case_id': expected_case_id,
+                                   'tx_id': expected_tx_id,
+                                   'questionnaire_id': expected_q_id,
+                                   'response_datetime': '2008-08-24T00:00:00+00:00',
+                                   'inbound_channel': 'OFFLINE'})
 
         channel, queue_declare_result = self.init_rabbitmq()
         assert queue_declare_result.method.message_count == 1, "Expected 1 message to be on rabbitmq queue"
@@ -49,7 +50,7 @@ class CensusRMPubSubComponentTest(TestCase):
         actual_msg = channel.basic_get(queue=RABBIT_QUEUE)
         return actual_msg[2].decode('utf-8')
 
-    def publish_to_pubsub(self, tx_id, case_id):
+    def publish_to_pubsub(self, tx_id, case_id, questionnaire_id):
         publisher = pubsub_v1.PublisherClient()
 
         topic_path = publisher.topic_path(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME)
@@ -59,6 +60,7 @@ class CensusRMPubSubComponentTest(TestCase):
             "metadata": {
                 "case_id": case_id,
                 "tx_id": tx_id,
+                "questionnaire_id": questionnaire_id,
             }
         })
 

@@ -33,4 +33,4 @@ down:
 	docker-compose down
 
 docker_build:
-	docker build -t eu.gcr.io/census-ci/rm/census-rm-pubsub:latest .
+	docker build -t eu.gcr.io/census-rm-ci/rm/census-rm-pubsub:latest .

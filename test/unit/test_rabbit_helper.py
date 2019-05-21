@@ -17,7 +17,7 @@ class RabbitHelperTestCase(TestCase):
     property_class = 'property_class'
     rabbit_url = 'rabbit_url'
     rabbit_connection = 'rabbit connection'
-    message = "xml message<blah>"
+    message = "message test"
     queue_args = {'x-dead-letter-exchange': 'case-deadletter-exchange',
                   'x-dead-letter-routing-key': binding_key}
 
@@ -72,7 +72,7 @@ class RabbitHelperTestCase(TestCase):
 
             channel_mock = MagicMock()
             connection_mock.channel = create_stub_function(return_value=channel_mock)
-            mock_pika.BasicProperties = create_stub_function(expected_kwargs={'content_type': 'text/xml'},
+            mock_pika.BasicProperties = create_stub_function(expected_kwargs={'content_type': 'application/json'},
                                                              return_value=self.property_class)
 
             send_message_to_rabbitmq(self.message,
