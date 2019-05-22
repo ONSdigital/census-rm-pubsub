@@ -14,8 +14,6 @@ RABBIT_QUEUE = "Case.Responses"
 RABBIT_EXCHANGE = "case-outbound-exchange"
 RABBIT_ROUTE = "Case.Responses.binding"
 RECEIPT_TOPIC_NAME = "eq-submission-topic"
-RABBIT_QUEUE_ARGS = {'x-dead-letter-exchange': 'case-deadletter-exchange',
-                     'x-dead-letter-routing-key': RABBIT_ROUTE}
 
 
 class CensusRMPubSubComponentTest(TestCase):
@@ -77,11 +75,10 @@ class CensusRMPubSubComponentTest(TestCase):
     def init_rabbitmq(self, rabbitmq_amqp=RABBIT_AMQP,
                       binding_key=RABBIT_ROUTE,
                       exchange_name=RABBIT_EXCHANGE,
-                      queue_name=RABBIT_QUEUE,
-                      queue_args=RABBIT_QUEUE_ARGS):
+                      queue_name=RABBIT_QUEUE):
         rabbitmq_connection = pika.BlockingConnection(pika.URLParameters(rabbitmq_amqp))
         channel = rabbitmq_connection.channel()
         channel.exchange_declare(exchange=exchange_name, exchange_type='direct', durable=True)
-        queue_declare_result = channel.queue_declare(queue=queue_name, durable=True, arguments=queue_args)
+        queue_declare_result = channel.queue_declare(queue=queue_name, durable=True)
         channel.queue_bind(exchange=exchange_name, queue=queue_name, routing_key=binding_key)
         return channel, queue_declare_result
