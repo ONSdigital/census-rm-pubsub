@@ -1,8 +1,8 @@
 import json
 import sys
-import time
 import uuid
 
+from google.api_core.exceptions import GoogleAPIError
 from google.cloud import pubsub_v1
 
 
@@ -24,13 +24,14 @@ if __name__ == '__main__':
         }
     })
 
-    future = publisher.publish(topic_path,
-                               data=data.encode('utf-8'),
-                               eventType='OBJECT_FINALIZE',
-                               bucketId='123',
-                               objectId=tx_id)
-
-    while not future.done():
-        time.sleep(1)
+    try:
+        publisher.publish(topic_path,
+                          data=data.encode('utf-8'),
+                          eventType='OBJECT_FINALIZE',
+                          bucketId='123',
+                          objectId=tx_id) \
+            .result(timeout=30)
+    except GoogleAPIError:
+        print("Failed to publish message to pubsub")
 
     print(f'Message published to {topic_path}')
