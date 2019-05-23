@@ -1,4 +1,5 @@
 import json
+import time
 import uuid
 from unittest import TestCase
 
@@ -64,13 +65,15 @@ class CensusRMPubSubComponentTest(TestCase):
             }
         })
 
+        future = publisher.publish(topic_path,
+                                   data=data.encode('utf-8'),
+                                   eventType='OBJECT_FINALIZE',
+                                   bucketId='123',
+                                   objectId=tx_id)
+        if not future.done():
+            time.sleep(1)
         try:
-            publisher.publish(topic_path,
-                              data=data.encode('utf-8'),
-                              eventType='OBJECT_FINALIZE',
-                              bucketId='123',
-                              objectId=tx_id) \
-                .result(timeout=30)
+            future.result(timeout=30)
         except GoogleAPIError:
             assert False, "Failed to publish message to pubsub"
 
