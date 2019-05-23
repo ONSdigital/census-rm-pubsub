@@ -18,8 +18,6 @@ class RabbitHelperTestCase(TestCase):
     rabbit_url = 'rabbit_url'
     rabbit_connection = 'rabbit connection'
     message = "message test"
-    queue_args = {'x-dead-letter-exchange': 'case-deadletter-exchange',
-                  'x-dead-letter-routing-key': binding_key}
 
     def setUp(self):
         test_environment_variables = {
@@ -44,12 +42,11 @@ class RabbitHelperTestCase(TestCase):
             init_rabbitmq(rabbitmq_amqp=self.rabbit_amqp,
                           binding_key=self.binding_key,
                           exchange_name=self.rabbit_exchange,
-                          queue_name=self.rabbit_queue,
-                          queue_args=self.queue_args)
+                          queue_name=self.rabbit_queue)
 
             channel_mock.exchange_declare.assert_called_once_with(exchange=self.rabbit_exchange, exchange_type='direct',
                                                                   durable=True)
-            channel_mock.queue_declare.assert_called_once_with(arguments=self.queue_args, durable=True,
+            channel_mock.queue_declare.assert_called_once_with(durable=True,
                                                                queue=self.rabbit_queue)
             channel_mock.queue_bind.assert_called_once_with(exchange=self.rabbit_exchange,
                                                             queue=self.rabbit_queue,
