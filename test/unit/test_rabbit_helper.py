@@ -10,7 +10,12 @@ from test import create_stub_function
 
 class RabbitHelperTestCase(TestCase):
 
-    rabbit_amqp = "amqp://user:pa55word@host:0001"
+    rabbit_username = 'user'
+    rabbit_password = 'pa55word'
+    rabbit_host = 'host'
+    rabbit_port = '0001'
+    rabbit_virtualhost = '/'
+
     binding_key = "test.binding"
     rabbit_queue = "test.queue"
     rabbit_exchange = "test-exchange"
@@ -21,7 +26,11 @@ class RabbitHelperTestCase(TestCase):
 
     def setUp(self):
         test_environment_variables = {
-            'RABBIT_AMQP': self.rabbit_amqp,
+            'RABBIT_USERNAME': self.rabbit_username,
+            'RABBIT_PASSWORD': self.rabbit_password,
+            'RABBIT_HOST': self.rabbit_host,
+            'RABBIT_PORT': self.rabbit_port,
+            'RABBIT_VIRTUALHOST': self.rabbit_virtualhost,
             'RABBIT_ROUTING_KEY': self.binding_key,
             'RABBIT_QUEUE': self.rabbit_queue,
             'RABBIT_EXCHANGE': self.rabbit_exchange,
@@ -33,16 +42,18 @@ class RabbitHelperTestCase(TestCase):
 
         with patch('app.rabbit_helper.pika') as mock_pika:
             connection_mock = MagicMock()
-            mock_pika.URLParameters = create_stub_function(self.rabbit_amqp, return_value=self.rabbit_url)
-            mock_pika.BlockingConnection = create_stub_function(self.rabbit_url, return_value=connection_mock)
+            mock_pika.BlockingConnection = create_stub_function(mock_pika.ConnectionParameters.return_value, return_value=connection_mock)
 
             channel_mock = MagicMock()
             connection_mock.channel = create_stub_function(return_value=channel_mock)
 
-            init_rabbitmq(rabbitmq_amqp=self.rabbit_amqp,
-                          binding_key=self.binding_key,
+            init_rabbitmq(binding_key=self.binding_key,
                           exchange_name=self.rabbit_exchange,
                           queue_name=self.rabbit_queue)
+
+            mock_pika.PlainCredentials.assert_called_once_with(self.rabbit_username, self.rabbit_password)
+            mock_pika.ConnectionParameters.assert_called_once_with(
+                self.rabbit_host, self.rabbit_port, self.rabbit_virtualhost, mock_pika.PlainCredentials.return_value)
 
             channel_mock.exchange_declare.assert_called_once_with(exchange=self.rabbit_exchange, exchange_type='direct',
                                                                   durable=True)
@@ -64,8 +75,7 @@ class RabbitHelperTestCase(TestCase):
 
         with patch('app.rabbit_helper.pika') as mock_pika:
             connection_mock = MagicMock()
-            mock_pika.URLParameters = create_stub_function(self.rabbit_amqp, return_value=self.rabbit_url)
-            mock_pika.BlockingConnection = create_stub_function(self.rabbit_url, return_value=connection_mock)
+            mock_pika.BlockingConnection = create_stub_function(mock_pika.ConnectionParameters.return_value, return_value=connection_mock)
 
             channel_mock = MagicMock()
             connection_mock.channel = create_stub_function(return_value=channel_mock)
@@ -73,9 +83,12 @@ class RabbitHelperTestCase(TestCase):
                                                              return_value=self.property_class)
 
             send_message_to_rabbitmq(self.message,
-                                     rabbitmq_amqp=self.rabbit_amqp,
                                      exchange_name=self.rabbit_exchange,
                                      routing_key=self.binding_key)
+
+            mock_pika.PlainCredentials.assert_called_once_with(self.rabbit_username, self.rabbit_password)
+            mock_pika.ConnectionParameters.assert_called_once_with(
+                self.rabbit_host, self.rabbit_port, self.rabbit_virtualhost, mock_pika.PlainCredentials.return_value)
 
             channel_mock.basic_publish.assert_called_once_with(exchange=self.rabbit_exchange,
                                                                routing_key=self.binding_key,
