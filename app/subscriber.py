@@ -58,7 +58,6 @@ def receipt_to_case(message: Message):
     log = log.bind(case_id=case_id, created=time_obj_created, tx_id=tx_id)
 
     metadata['response_datetime'] = time_obj_created
-    metadata['inbound_channel'] = 'OFFLINE'
     send_message_to_rabbitmq(json.dumps(metadata))  # NB: in the future this should hold `questionnaire_id`
     message.ack()
 
