@@ -42,7 +42,8 @@ class RabbitHelperTestCase(TestCase):
 
         with patch('app.rabbit_helper.pika') as mock_pika:
             connection_mock = MagicMock()
-            mock_pika.BlockingConnection = create_stub_function(mock_pika.ConnectionParameters.return_value, return_value=connection_mock)
+            mock_pika.BlockingConnection = create_stub_function(mock_pika.ConnectionParameters.return_value,
+                                                                return_value=connection_mock)
 
             channel_mock = MagicMock()
             connection_mock.channel = create_stub_function(return_value=channel_mock)
@@ -75,7 +76,8 @@ class RabbitHelperTestCase(TestCase):
 
         with patch('app.rabbit_helper.pika') as mock_pika:
             connection_mock = MagicMock()
-            mock_pika.BlockingConnection = create_stub_function(mock_pika.ConnectionParameters.return_value, return_value=connection_mock)
+            mock_pika.BlockingConnection = create_stub_function(mock_pika.ConnectionParameters.return_value,
+                                                                return_value=connection_mock)
 
             channel_mock = MagicMock()
             connection_mock.channel = create_stub_function(return_value=channel_mock)
