@@ -125,8 +125,7 @@ class TestSubscriber(TestCase):
 
         expected_rabbit_message = json.dumps({'tx_id': '1',
                                               'case_id': self.case_id,
-                                              'response_datetime': '2008-08-24T00:00:00+00:00',
-                                              'inbound_channel': 'OFFLINE'})
+                                              'response_datetime': '2008-08-24T00:00:00+00:00'})
 
         from app.subscriber import receipt_to_case
 

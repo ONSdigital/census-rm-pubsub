@@ -1,6 +1,6 @@
 import os
-from unittest.mock import patch, MagicMock
 from unittest import TestCase
+from unittest.mock import patch, MagicMock
 
 from pika.exceptions import AMQPConnectionError
 from pytest import raises
@@ -42,7 +42,8 @@ class RabbitHelperTestCase(TestCase):
 
         with patch('app.rabbit_helper.pika') as mock_pika:
             connection_mock = MagicMock()
-            mock_pika.BlockingConnection = create_stub_function(mock_pika.ConnectionParameters.return_value, return_value=connection_mock)
+            mock_pika.BlockingConnection = create_stub_function(mock_pika.ConnectionParameters.return_value,
+                                                                return_value=connection_mock)
 
             channel_mock = MagicMock()
             connection_mock.channel = create_stub_function(return_value=channel_mock)
@@ -75,11 +76,14 @@ class RabbitHelperTestCase(TestCase):
 
         with patch('app.rabbit_helper.pika') as mock_pika:
             connection_mock = MagicMock()
-            mock_pika.BlockingConnection = create_stub_function(mock_pika.ConnectionParameters.return_value, return_value=connection_mock)
+            mock_pika.BlockingConnection = create_stub_function(mock_pika.ConnectionParameters.return_value,
+                                                                return_value=connection_mock)
 
             channel_mock = MagicMock()
             connection_mock.channel = create_stub_function(return_value=channel_mock)
-            mock_pika.BasicProperties = create_stub_function(expected_kwargs={'content_type': 'application/json'},
+            mock_pika.BasicProperties = create_stub_function(expected_kwargs={'content_type': 'application/json',
+                                                                              'headers': {'source': 'RECEIPTING',
+                                                                                          'channel': 'EQ'}},
                                                              return_value=self.property_class)
 
             send_message_to_rabbitmq(self.message,

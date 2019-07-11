@@ -32,8 +32,7 @@ class CensusRMPubSubComponentTest(TestCase):
         expected_msg = json.dumps({'case_id': expected_case_id,
                                    'tx_id': expected_tx_id,
                                    'questionnaire_id': expected_q_id,
-                                   'response_datetime': '2008-08-24T00:00:00+00:00',
-                                   'inbound_channel': 'OFFLINE'})
+                                   'response_datetime': '2008-08-24T00:00:00+00:00'})
 
         channel, queue_declare_result = self.init_rabbitmq()
         assert queue_declare_result.method.message_count == 1, "Expected 1 message to be on rabbitmq queue"
