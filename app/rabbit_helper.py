@@ -50,11 +50,10 @@ def send_message_to_rabbitmq(message,
     """
     rabbitmq_connection = _create_connection()
     rabbitmq_channel = rabbitmq_connection.channel()
-    headers = {'source': 'RECEIPTING', 'channel': 'EQ'}
     rabbitmq_channel.basic_publish(exchange=exchange_name,
                                    routing_key=routing_key,
                                    body=str(message),
-                                   properties=pika.BasicProperties(content_type='application/json', headers=headers))
+                                   properties=pika.BasicProperties(content_type='application/json'))
     logger.info('Message successfully sent to rabbitmq', exchange=exchange_name, route=routing_key)
 
     rabbitmq_connection.close()

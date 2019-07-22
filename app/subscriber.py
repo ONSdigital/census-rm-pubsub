@@ -5,11 +5,9 @@ import os
 from google.cloud.pubsub_v1 import SubscriberClient
 from google.cloud.pubsub_v1.subscriber.message import Message
 from rfc3339 import parse_datetime
-
 from structlog import wrap_logger
 
 from app.rabbit_helper import send_message_to_rabbitmq
-
 
 SUBSCRIPTION_NAME = os.getenv("SUBSCRIPTION_NAME", "rm-receipt-subscription")
 SUBSCRIPTION_PROJECT_ID = os.getenv("SUBSCRIPTION_PROJECT_ID")
@@ -43,7 +41,7 @@ def receipt_to_case(message: Message):
     try:
         payload = json.loads(message.data)  # parse metadata as JSON payload
         metadata = payload['metadata']
-        case_id, tx_id = metadata['case_id'], metadata['tx_id']
+        case_id, tx_id, questionnaire_id = metadata['case_id'], metadata['tx_id'], metadata['questionnaire_id']
         time_obj_created = parse_datetime(payload['timeCreated']).isoformat()
     except (TypeError, json.JSONDecodeError):
         log.error('Pub/Sub Message data not JSON')
@@ -58,7 +56,28 @@ def receipt_to_case(message: Message):
     log = log.bind(case_id=case_id, created=time_obj_created, tx_id=tx_id)
 
     metadata['response_datetime'] = time_obj_created
-    send_message_to_rabbitmq(json.dumps(metadata))  # NB: in the future this should hold `questionnaire_id`
+
+    receiptMessage = {}
+    eventObject = {}
+    payloadObject = {}
+    responseObject = {}
+
+    eventObject['type'] = 'RESPONSE_RECEIVED'
+    eventObject['source'] = 'RECEIPTING'
+    eventObject['channel'] = 'EQ'
+    eventObject['dateTime'] = time_obj_created
+    eventObject['transactionId'] = tx_id
+
+    responseObject['caseId'] = case_id
+    responseObject['questionnaireId'] = questionnaire_id
+    responseObject['unreceipt'] = 'false'
+
+    payloadObject['response'] = responseObject
+
+    receiptMessage['event'] = eventObject
+    receiptMessage['payload'] = payloadObject
+
+    send_message_to_rabbitmq(json.dumps(receiptMessage))  # NB: in the future this should hold `questionnaire_id`
     message.ack()
 
     log.info('Message processing complete')
