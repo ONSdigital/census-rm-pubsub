@@ -63,7 +63,7 @@ def receipt_to_case(message: Message):
     responseObject = {}
 
     eventObject['type'] = 'RESPONSE_RECEIVED'
-    eventObject['source'] = 'RECEIPTING'
+    eventObject['source'] = 'RECEIPT_SERVICE'
     eventObject['channel'] = 'EQ'
     eventObject['dateTime'] = time_obj_created
     eventObject['transactionId'] = tx_id
