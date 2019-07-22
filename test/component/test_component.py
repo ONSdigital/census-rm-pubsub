@@ -40,6 +40,21 @@ class CensusRMPubSubComponentTest(TestCase):
         actual_msg_body_str = self.get_msg_body_from_rabbit(channel)
         assert expected_msg == actual_msg_body_str, "RabbitMQ message text incorrect"
 
+    def test_e2e_with_no_case_id(self):
+        expected_tx_id = str(uuid.uuid4())
+        expected_q_id = str(uuid.uuid4())
+        self.publish_to_pubsub2(expected_tx_id, expected_q_id)
+
+        expected_msg = json.dumps({'tx_id': expected_tx_id,
+                                   'questionnaire_id': expected_q_id,
+                                   'response_datetime': '2008-08-24T00:00:00+00:00'})
+
+        channel, queue_declare_result = self.init_rabbitmq()
+        assert queue_declare_result.method.message_count == 1, "Expected 1 message to be on rabbitmq queue"
+
+        actual_msg_body_str = self.get_msg_body_from_rabbit(channel)
+        assert expected_msg == actual_msg_body_str, "RabbitMQ message text incorrect"
+
     def purge_rabbit_queue(self):
         channel, queue_declare_result = self.init_rabbitmq()
         channel.queue_purge(queue=RABBIT_QUEUE)
@@ -57,6 +72,33 @@ class CensusRMPubSubComponentTest(TestCase):
             "timeCreated": "2008-08-24T00:00:00Z",
             "metadata": {
                 "case_id": case_id,
+                "tx_id": tx_id,
+                "questionnaire_id": questionnaire_id,
+            }
+        })
+
+        future = publisher.publish(topic_path,
+                                   data=data.encode('utf-8'),
+                                   eventType='OBJECT_FINALIZE',
+                                   bucketId='123',
+                                   objectId=tx_id)
+        if not future.done():
+            time.sleep(1)
+        try:
+            future.result(timeout=30)
+        except GoogleAPIError:
+            assert False, "Failed to publish message to pubsub"
+
+        print(f'Message published to {topic_path}')
+
+    def publish_to_pubsub2(self, tx_id, questionnaire_id):
+        publisher = pubsub_v1.PublisherClient()
+
+        topic_path = publisher.topic_path(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME)
+
+        data = json.dumps({
+            "timeCreated": "2008-08-24T00:00:00Z",
+            "metadata": {
                 "tx_id": tx_id,
                 "questionnaire_id": questionnaire_id,
             }
