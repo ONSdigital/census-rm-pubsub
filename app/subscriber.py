@@ -43,7 +43,7 @@ def receipt_to_case(message: Message):
     try:
         payload = json.loads(message.data)  # parse metadata as JSON payload
         metadata = payload['metadata']
-        tx_id, questionnaire_id, case_id = metadata['tx_id'], metadata['questionnaire_id'], 0
+        tx_id, questionnaire_id, case_id = metadata['tx_id'], metadata['questionnaire_id'], metadata.get('case_id')
         if 'case_id' in metadata.keys():
             case_id = metadata['case_id']
         time_obj_created = parse_datetime(payload['timeCreated']).isoformat()
