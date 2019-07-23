@@ -27,7 +27,7 @@ class CensusRMPubSubComponentTest(TestCase):
         expected_case_id = str(uuid.uuid4())
         expected_tx_id = str(uuid.uuid4())
         expected_q_id = str(uuid.uuid4())
-        self.publish_to_pubsub(expected_tx_id, expected_case_id, expected_q_id)
+        self.publish_to_pubsub(expected_tx_id, expected_q_id, expected_case_id)
 
         expected_msg = json.dumps({'tx_id': expected_tx_id,
                                    'questionnaire_id': expected_q_id,
@@ -43,12 +43,10 @@ class CensusRMPubSubComponentTest(TestCase):
     def test_e2e_with_no_case_id(self):
         expected_tx_id = str(uuid.uuid4())
         expected_q_id = str(uuid.uuid4())
-        expected_case_id = 0
-        self.publish_to_pubsub(expected_tx_id, expected_case_id, expected_q_id)
+        self.publish_to_pubsub(expected_tx_id, expected_q_id)
 
         expected_msg = json.dumps({'tx_id': expected_tx_id,
                                    'questionnaire_id': expected_q_id,
-                                   'case_id': expected_case_id,
                                    'response_datetime': '2008-08-24T00:00:00+00:00'})
 
         self.init_rabbitmq()
@@ -65,19 +63,23 @@ class CensusRMPubSubComponentTest(TestCase):
         actual_msg = channel.basic_get(queue=RABBIT_QUEUE)
         return actual_msg[2].decode('utf-8')
 
-    def publish_to_pubsub(self, tx_id, case_id, questionnaire_id):
+    def publish_to_pubsub(self, tx_id, questionnaire_id, case_id=None):
         publisher = pubsub_v1.PublisherClient()
 
         topic_path = publisher.topic_path(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME)
 
-        data = json.dumps({
+        datadict = {
             "timeCreated": "2008-08-24T00:00:00Z",
             "metadata": {
                 "tx_id": tx_id,
                 "questionnaire_id": questionnaire_id,
-                "case_id": case_id,
             }
-        })
+        }
+
+        if case_id is not None:
+            datadict["metadata"]["case_id"] = case_id
+
+        data = json.dumps(datadict)
 
         future = publisher.publish(topic_path,
                                    data=data.encode('utf-8'),
