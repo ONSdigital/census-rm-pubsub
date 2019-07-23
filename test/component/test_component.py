@@ -23,7 +23,6 @@ class CensusRMPubSubComponentTest(TestCase):
         os.environ["PUBSUB_EMULATOR_HOST"] = "localhost:8539"
         self.purge_rabbit_queue()
 
-
     def test_e2e_with_sucessful_msg(self):
         expected_case_id = str(uuid.uuid4())
         expected_tx_id = str(uuid.uuid4())
