@@ -20,7 +20,7 @@ if __name__ == '__main__':
     data = json.dumps({
         "timeCreated": "2008-08-24T00:00:00Z",
         "metadata": {
-            "tx_id": "123456789",
+            "tx_id": tx_id,
             "questionnaire_id": "0120000000001000"
         }
     })
