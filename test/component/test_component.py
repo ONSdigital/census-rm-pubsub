@@ -23,41 +23,44 @@ class CensusRMPubSubComponentTest(TestCase):
         os.environ["PUBSUB_EMULATOR_HOST"] = "localhost:8539"
         self.purge_rabbit_queue()
 
+
     def test_e2e_with_sucessful_msg(self):
         expected_case_id = str(uuid.uuid4())
         expected_tx_id = str(uuid.uuid4())
         expected_q_id = str(uuid.uuid4())
         self.publish_to_pubsub(expected_tx_id, expected_case_id, expected_q_id)
 
-        expected_msg = json.dumps({'case_id': expected_case_id,
-                                   'tx_id': expected_tx_id,
+        expected_msg = json.dumps({'tx_id': expected_tx_id,
                                    'questionnaire_id': expected_q_id,
+                                   'case_id': expected_case_id,
                                    'response_datetime': '2008-08-24T00:00:00+00:00'})
 
-        channel, queue_declare_result = self.init_rabbitmq()
-        assert queue_declare_result.method.message_count == 1, "Expected 1 message to be on rabbitmq queue"
+        self.init_rabbitmq()
+        assert self.queue_declare_result.method.message_count == 1, "Expected 1 message to be on rabbitmq queue"
 
-        actual_msg_body_str = self.get_msg_body_from_rabbit(channel)
+        actual_msg_body_str = self.get_msg_body_from_rabbit(self.channel)
         assert expected_msg == actual_msg_body_str, "RabbitMQ message text incorrect"
 
     def test_e2e_with_no_case_id(self):
         expected_tx_id = str(uuid.uuid4())
         expected_q_id = str(uuid.uuid4())
-        self.publish_to_pubsub2(expected_tx_id, expected_q_id)
+        expected_case_id = 0
+        self.publish_to_pubsub(expected_tx_id, expected_case_id, expected_q_id)
 
         expected_msg = json.dumps({'tx_id': expected_tx_id,
                                    'questionnaire_id': expected_q_id,
+                                   'case_id': expected_case_id,
                                    'response_datetime': '2008-08-24T00:00:00+00:00'})
 
-        channel, queue_declare_result = self.init_rabbitmq()
-        assert queue_declare_result.method.message_count == 1, "Expected 1 message to be on rabbitmq queue"
+        self.init_rabbitmq()
+        assert self.queue_declare_result.method.message_count == 1, "Expected 1 message to be on rabbitmq queue"
 
-        actual_msg_body_str = self.get_msg_body_from_rabbit(channel)
+        actual_msg_body_str = self.get_msg_body_from_rabbit(self.channel)
         assert expected_msg == actual_msg_body_str, "RabbitMQ message text incorrect"
 
     def purge_rabbit_queue(self):
-        channel, queue_declare_result = self.init_rabbitmq()
-        channel.queue_purge(queue=RABBIT_QUEUE)
+        self.init_rabbitmq()
+        self.channel.queue_purge(queue=RABBIT_QUEUE)
 
     def get_msg_body_from_rabbit(self, channel):
         actual_msg = channel.basic_get(queue=RABBIT_QUEUE)
@@ -71,36 +74,9 @@ class CensusRMPubSubComponentTest(TestCase):
         data = json.dumps({
             "timeCreated": "2008-08-24T00:00:00Z",
             "metadata": {
+                "tx_id": tx_id,
+                "questionnaire_id": questionnaire_id,
                 "case_id": case_id,
-                "tx_id": tx_id,
-                "questionnaire_id": questionnaire_id,
-            }
-        })
-
-        future = publisher.publish(topic_path,
-                                   data=data.encode('utf-8'),
-                                   eventType='OBJECT_FINALIZE',
-                                   bucketId='123',
-                                   objectId=tx_id)
-        if not future.done():
-            time.sleep(1)
-        try:
-            future.result(timeout=30)
-        except GoogleAPIError:
-            assert False, "Failed to publish message to pubsub"
-
-        print(f'Message published to {topic_path}')
-
-    def publish_to_pubsub2(self, tx_id, questionnaire_id):
-        publisher = pubsub_v1.PublisherClient()
-
-        topic_path = publisher.topic_path(RECEIPT_TOPIC_PROJECT_ID, RECEIPT_TOPIC_NAME)
-
-        data = json.dumps({
-            "timeCreated": "2008-08-24T00:00:00Z",
-            "metadata": {
-                "tx_id": tx_id,
-                "questionnaire_id": questionnaire_id,
             }
         })
 
@@ -127,4 +103,6 @@ class CensusRMPubSubComponentTest(TestCase):
         channel.exchange_declare(exchange=exchange_name, exchange_type='direct', durable=True)
         queue_declare_result = channel.queue_declare(queue=queue_name, durable=True)
         channel.queue_bind(exchange=exchange_name, queue=queue_name, routing_key=binding_key)
-        return channel, queue_declare_result
+        self.channel = channel
+        self.queue_declare_result = queue_declare_result
+        return
