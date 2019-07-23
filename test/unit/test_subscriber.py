@@ -12,6 +12,7 @@ class TestSubscriber(TestCase):
     subscription_name = 'test-subscription'
     subscription_project_id = 'test-project-id'
     case_id = 'e079cea4-1447-4529-aa70-8757f1806f60'
+    questionnaire_id = '0120000000001000'
     created = '2008-08-24T00:00:00Z'
     parsed_created = '2008-08-24T00:00:00+00:00'
     gcp_bucket = 'test-bucket'
@@ -106,7 +107,7 @@ class TestSubscriber(TestCase):
                                    'bucketId': self.gcp_bucket,
                                    'objectId': self.gcp_object_id}
         mock_message.data = json.dumps(
-            {"metadata": {"tx_id": "1", "case_id": self.case_id}, "timeCreated": self.created})
+            {"metadata": {"tx_id": "1", "questionnaire_id": self.questionnaire_id, "case_id": self.case_id}, "timeCreated": self.created})
         mock_message.message_id = str(uuid.uuid4())
 
         create_stub_function(self.created, return_value=self.parsed_created)
@@ -114,9 +115,10 @@ class TestSubscriber(TestCase):
         expected_log_event = 'Message processing complete'
         expected_log_kwargs = {
             'bucket_name': self.gcp_bucket,
-            'case_id': self.case_id,
+            'questionnaire_id': self.questionnaire_id,
             'created': self.parsed_created,
             'tx_id': '1',
+            'case_id': self.case_id,
             'object_name': self.gcp_object_id,
             'subscription_name': self.subscription_name,
             'subscription_project': self.subscription_project_id,
@@ -124,6 +126,7 @@ class TestSubscriber(TestCase):
         }
 
         expected_rabbit_message = json.dumps({'tx_id': '1',
+                                              'questionnaire_id': self.questionnaire_id,
                                               'case_id': self.case_id,
                                               'response_datetime': '2008-08-24T00:00:00+00:00'})
 
@@ -283,7 +286,7 @@ class TestSubscriber(TestCase):
         mock_message.ack.assert_not_called()
 
     @patch('app.subscriber.send_message_to_rabbitmq')
-    def test_receipt_to_case_missing_json_metadata_case_id(self, mock_send_message_to_rabbit_mq):
+    def test_receipt_to_case_missing_json_metadata_questionnaire_id(self, mock_send_message_to_rabbit_mq):
         mock_message = MagicMock()
         mock_message.message_id = str(uuid.uuid4())
         mock_message.attributes = {'eventType': 'OBJECT_FINALIZE',
@@ -298,7 +301,7 @@ class TestSubscriber(TestCase):
             'subscription_name': self.subscription_name,
             'subscription_project': self.subscription_project_id,
             'message_id': mock_message.message_id,
-            'missing_json_key': 'case_id',
+            'missing_json_key': 'questionnaire_id',
         }
 
         from app.subscriber import receipt_to_case
@@ -343,7 +346,7 @@ class TestSubscriber(TestCase):
         mock_message.attributes = {'eventType': 'OBJECT_FINALIZE',
                                    'bucketId': self.gcp_bucket,
                                    'objectId': self.gcp_object_id}
-        mock_message.data = json.dumps({"metadata": {"tx_id": "1", "case_id": "2"}})
+        mock_message.data = json.dumps({"metadata": {"tx_id": "1", "questionnaire_id": "0120000000001000"}})
 
         expected_log_event = 'Pub/Sub Message missing required data'
         expected_log_kwargs = {
@@ -370,7 +373,7 @@ class TestSubscriber(TestCase):
         mock_message.attributes = {'eventType': 'OBJECT_FINALIZE',
                                    'bucketId': self.gcp_bucket,
                                    'objectId': self.gcp_object_id}
-        mock_message.data = json.dumps({"metadata": {"tx_id": "1", "case_id": "2"}, "timeCreated": "123"})
+        mock_message.data = json.dumps({"metadata": {"tx_id": "1", "questionnaire_id": "0120000000001000"}, "timeCreated": "123"})
 
         expected_log_event = 'Pub/Sub Message has invalid RFC 3339 timeCreated datetime string'
         expected_log_kwargs = {

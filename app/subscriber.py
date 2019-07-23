@@ -43,7 +43,7 @@ def receipt_to_case(message: Message):
     try:
         payload = json.loads(message.data)  # parse metadata as JSON payload
         metadata = payload['metadata']
-        case_id, tx_id = metadata['case_id'], metadata['tx_id']
+        tx_id, questionnaire_id, case_id = metadata['tx_id'], metadata['questionnaire_id'], metadata.get('case_id')
         time_obj_created = parse_datetime(payload['timeCreated']).isoformat()
     except (TypeError, json.JSONDecodeError):
         log.error('Pub/Sub Message data not JSON')
@@ -55,7 +55,7 @@ def receipt_to_case(message: Message):
         log.error('Pub/Sub Message has invalid RFC 3339 timeCreated datetime string')
         return
 
-    log = log.bind(case_id=case_id, created=time_obj_created, tx_id=tx_id)
+    log = log.bind(questionnaire_id=questionnaire_id, created=time_obj_created, tx_id=tx_id, case_id=case_id)
 
     metadata['response_datetime'] = time_obj_created
     send_message_to_rabbitmq(json.dumps(metadata))  # NB: in the future this should hold `questionnaire_id`
