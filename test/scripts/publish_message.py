@@ -16,7 +16,6 @@ if __name__ == '__main__':
         sys.exit()
 
     tx_id = str(uuid.uuid4())
-    case_id = str(uuid.uuid4())
     data = json.dumps({
         "timeCreated": "2008-08-24T00:00:00Z",
         "metadata": {
