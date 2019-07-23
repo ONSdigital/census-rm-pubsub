@@ -44,8 +44,6 @@ def receipt_to_case(message: Message):
         payload = json.loads(message.data)  # parse metadata as JSON payload
         metadata = payload['metadata']
         tx_id, questionnaire_id, case_id = metadata['tx_id'], metadata['questionnaire_id'], metadata.get('case_id')
-        if 'case_id' in metadata.keys():
-            case_id = metadata['case_id']
         time_obj_created = parse_datetime(payload['timeCreated']).isoformat()
     except (TypeError, json.JSONDecodeError):
         log.error('Pub/Sub Message data not JSON')
