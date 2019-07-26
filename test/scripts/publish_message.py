@@ -16,12 +16,11 @@ if __name__ == '__main__':
         sys.exit()
 
     tx_id = str(uuid.uuid4())
-    case_id = str(uuid.uuid4())
     data = json.dumps({
         "timeCreated": "2008-08-24T00:00:00Z",
         "metadata": {
-            "case_id": case_id,
             "tx_id": tx_id,
+            "questionnaire_id": "0120000000001000"
         }
     })
 
