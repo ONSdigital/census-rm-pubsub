@@ -79,7 +79,7 @@ def receipt_to_case(message: Message):
     receiptMessage['event'] = eventObject
     receiptMessage['payload'] = payloadObject
 
-    send_message_to_rabbitmq(json.dumps(receiptMessage))  # NB: in the future this should hold `questionnaire_id`
+    send_message_to_rabbitmq(json.dumps(receiptMessage))
     message.ack()
 
     log.info('Message processing complete')
