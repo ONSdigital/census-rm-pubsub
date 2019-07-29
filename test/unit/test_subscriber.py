@@ -125,11 +125,23 @@ class TestSubscriber(TestCase):
             'message_id': mock_message.message_id
         }
 
-        expected_rabbit_message = json.dumps({'tx_id': '1',
-                                              'questionnaire_id': self.questionnaire_id,
-                                              'case_id': self.case_id,
-                                              'response_datetime': '2008-08-24T00:00:00+00:00'})
-
+        expected_rabbit_message = json.dumps(
+            {'event': {
+                'type': 'RESPONSE_RECEIVED',
+                'source': 'RECEIPT_SERVICE',
+                'channel': 'EQ',
+                'dateTime': '2008-08-24T00:00:00+00:00',
+                'transactionId': '1'
+            },
+                'payload': {
+                    'response': {
+                        'caseId': self.case_id,
+                        'questionnaireId': self.questionnaire_id,
+                        'unreceipt': "false"
+                    }
+                }
+            })
+        
         from app.subscriber import receipt_to_case
 
         with self.checkExpectedLogLine('INFO', expected_log_event, expected_log_kwargs):

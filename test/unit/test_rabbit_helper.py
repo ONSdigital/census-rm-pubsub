@@ -81,9 +81,7 @@ class RabbitHelperTestCase(TestCase):
 
             channel_mock = MagicMock()
             connection_mock.channel = create_stub_function(return_value=channel_mock)
-            mock_pika.BasicProperties = create_stub_function(expected_kwargs={'content_type': 'application/json',
-                                                                              'headers': {'source': 'RECEIPTING',
-                                                                                          'channel': 'EQ'}},
+            mock_pika.BasicProperties = create_stub_function(expected_kwargs={'content_type': 'application/json'},
                                                              return_value=self.property_class)
 
             send_message_to_rabbitmq(self.message,
