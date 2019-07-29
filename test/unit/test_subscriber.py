@@ -138,7 +138,7 @@ class TestSubscriber(TestCase):
                     'response': {
                         'caseId': self.case_id,
                         'questionnaireId': self.questionnaire_id,
-                        'unreceipt': "false"
+                        'unreceipt': False
                     }
                 }
             })

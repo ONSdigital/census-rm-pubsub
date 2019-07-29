@@ -40,7 +40,7 @@ class CensusRMPubSubComponentTest(TestCase):
                 "response": {
                     "caseId": expected_case_id,
                     "questionnaireId": expected_q_id,
-                    "unreceipt": "false"
+                    "unreceipt": False
                 }
             }
         })
@@ -68,7 +68,7 @@ class CensusRMPubSubComponentTest(TestCase):
                 "response": {
                     "caseId": None,
                     "questionnaireId": expected_q_id,
-                    "unreceipt": "false"
+                    "unreceipt": False
                 }
             }
         })
