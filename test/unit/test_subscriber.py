@@ -107,7 +107,8 @@ class TestSubscriber(TestCase):
                                    'bucketId': self.gcp_bucket,
                                    'objectId': self.gcp_object_id}
         mock_message.data = json.dumps(
-            {"metadata": {"tx_id": "1", "questionnaire_id": self.questionnaire_id, "case_id": self.case_id}, "timeCreated": self.created})
+            {"metadata": {"tx_id": "1", "questionnaire_id": self.questionnaire_id, "case_id": self.case_id},
+             "timeCreated": self.created})
         mock_message.message_id = str(uuid.uuid4())
 
         create_stub_function(self.created, return_value=self.parsed_created)
@@ -141,7 +142,7 @@ class TestSubscriber(TestCase):
                     }
                 }
             })
-        
+
         from app.subscriber import receipt_to_case
 
         with self.checkExpectedLogLine('INFO', expected_log_event, expected_log_kwargs):
@@ -385,7 +386,8 @@ class TestSubscriber(TestCase):
         mock_message.attributes = {'eventType': 'OBJECT_FINALIZE',
                                    'bucketId': self.gcp_bucket,
                                    'objectId': self.gcp_object_id}
-        mock_message.data = json.dumps({"metadata": {"tx_id": "1", "questionnaire_id": "0120000000001000"}, "timeCreated": "123"})
+        mock_message.data = json.dumps(
+            {"metadata": {"tx_id": "1", "questionnaire_id": "0120000000001000"}, "timeCreated": "123"})
 
         expected_log_event = 'Pub/Sub Message has invalid RFC 3339 timeCreated datetime string'
         expected_log_kwargs = {
