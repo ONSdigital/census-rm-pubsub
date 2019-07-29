@@ -57,8 +57,6 @@ def receipt_to_case(message: Message):
 
     log = log.bind(questionnaire_id=questionnaire_id, created=time_obj_created, tx_id=tx_id, case_id=case_id)
 
-    metadata['response_datetime'] = time_obj_created
-
     receipt_message = {
         'event': {
             'type': 'RESPONSE_RECEIVED',
