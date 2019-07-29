@@ -59,27 +59,24 @@ def receipt_to_case(message: Message):
 
     metadata['response_datetime'] = time_obj_created
 
-    receiptMessage = {}
-    eventObject = {}
-    payloadObject = {}
-    responseObject = {}
+    receipt_message = {
+        'event': {
+            'type': 'RESPONSE_RECEIVED',
+            'source': 'RECEIPT_SERVICE',
+            'channel': 'EQ',
+            'dateTime': time_obj_created,
+            'transactionId': tx_id
+        },
+        'payload': {
+            'response': {
+                'caseId': case_id,
+                'questionnaireId': questionnaire_id,
+                'unreceipt': False
+            }
+        }
+    }
 
-    eventObject['type'] = 'RESPONSE_RECEIVED'
-    eventObject['source'] = 'RECEIPT_SERVICE'
-    eventObject['channel'] = 'EQ'
-    eventObject['dateTime'] = time_obj_created
-    eventObject['transactionId'] = tx_id
-
-    responseObject['caseId'] = case_id
-    responseObject['questionnaireId'] = questionnaire_id
-    responseObject['unreceipt'] = 'false'
-
-    payloadObject['response'] = responseObject
-
-    receiptMessage['event'] = eventObject
-    receiptMessage['payload'] = payloadObject
-
-    send_message_to_rabbitmq(json.dumps(receiptMessage))
+    send_message_to_rabbitmq(json.dumps(receipt_message))
     message.ack()
 
     log.info('Message processing complete')
