@@ -74,7 +74,6 @@ class CensusRMPubSubComponentTest(TestCase):
         })
 
         self.init_rabbitmq()
-        time.sleep(1)
         assert self.queue_declare_result.method.message_count == 1, "Expected 1 message to be on rabbitmq queue"
 
         actual_msg_body_str = self.get_msg_body_from_rabbit(self.channel)
