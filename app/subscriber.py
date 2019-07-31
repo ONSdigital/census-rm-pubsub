@@ -57,8 +57,24 @@ def receipt_to_case(message: Message):
 
     log = log.bind(questionnaire_id=questionnaire_id, created=time_obj_created, tx_id=tx_id, case_id=case_id)
 
-    metadata['response_datetime'] = time_obj_created
-    send_message_to_rabbitmq(json.dumps(metadata))  # NB: in the future this should hold `questionnaire_id`
+    receipt_message = {
+        'event': {
+            'type': 'RESPONSE_RECEIVED',
+            'source': 'RECEIPT_SERVICE',
+            'channel': 'EQ',
+            'dateTime': time_obj_created,
+            'transactionId': tx_id
+        },
+        'payload': {
+            'response': {
+                'caseId': case_id,
+                'questionnaireId': questionnaire_id,
+                'unreceipt': False
+            }
+        }
+    }
+
+    send_message_to_rabbitmq(json.dumps(receipt_message))
     message.ack()
 
     log.info('Message processing complete')

@@ -8,7 +8,6 @@ from coverage.python import os
 from google.api_core.exceptions import GoogleAPIError
 from google.cloud import pubsub_v1
 
-
 RABBIT_AMQP = "amqp://guest:guest@localhost:35672"
 RECEIPT_TOPIC_PROJECT_ID = "project"
 RABBIT_QUEUE = "Case.Responses"
@@ -29,10 +28,22 @@ class CensusRMPubSubComponentTest(TestCase):
         expected_q_id = str(uuid.uuid4())
         self.publish_to_pubsub(expected_tx_id, expected_q_id, expected_case_id)
 
-        expected_msg = json.dumps({'tx_id': expected_tx_id,
-                                   'questionnaire_id': expected_q_id,
-                                   'case_id': expected_case_id,
-                                   'response_datetime': '2008-08-24T00:00:00+00:00'})
+        expected_msg = json.dumps({
+            "event": {
+                "type": "RESPONSE_RECEIVED",
+                "source": "RECEIPT_SERVICE",
+                "channel": "EQ",
+                "dateTime": "2008-08-24T00:00:00+00:00",
+                "transactionId": expected_tx_id
+            },
+            "payload": {
+                "response": {
+                    "caseId": expected_case_id,
+                    "questionnaireId": expected_q_id,
+                    "unreceipt": False
+                }
+            }
+        })
 
         self.init_rabbitmq()
         assert self.queue_declare_result.method.message_count == 1, "Expected 1 message to be on rabbitmq queue"
@@ -45,9 +56,22 @@ class CensusRMPubSubComponentTest(TestCase):
         expected_q_id = str(uuid.uuid4())
         self.publish_to_pubsub(expected_tx_id, expected_q_id)
 
-        expected_msg = json.dumps({'tx_id': expected_tx_id,
-                                   'questionnaire_id': expected_q_id,
-                                   'response_datetime': '2008-08-24T00:00:00+00:00'})
+        expected_msg = json.dumps({
+            "event": {
+                "type": "RESPONSE_RECEIVED",
+                "source": "RECEIPT_SERVICE",
+                "channel": "EQ",
+                "dateTime": "2008-08-24T00:00:00+00:00",
+                "transactionId": expected_tx_id
+            },
+            "payload": {
+                "response": {
+                    "caseId": None,
+                    "questionnaireId": expected_q_id,
+                    "unreceipt": False
+                }
+            }
+        })
 
         self.init_rabbitmq()
         assert self.queue_declare_result.method.message_count == 1, "Expected 1 message to be on rabbitmq queue"
