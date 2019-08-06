@@ -4,8 +4,9 @@ import os
 import pika
 from structlog import wrap_logger
 
-RABBIT_EXCHANGE = os.getenv("RABBIT_EXCHANGE", "case-outbound-exchange")
+RABBIT_EXCHANGE = os.getenv("RABBIT_EXCHANGE", "events")
 RABBIT_QUEUE = os.getenv("RABBIT_QUEUE", "Case.Responses")
+RABBIT_FIELD_QUEUE = os.getenv("RABBIT_FIELD_QUEUE", "FieldWorkAdapter.Responses")
 RABBIT_ROUTE = os.getenv("RABBIT_ROUTING_KEY", "Case.Responses.binding")
 
 RABBIT_HOST = os.getenv("RABBIT_HOST", "localhost")
@@ -19,7 +20,8 @@ logger = wrap_logger(logging.getLogger(__name__))
 
 def init_rabbitmq(binding_key=RABBIT_ROUTE,
                   exchange_name=RABBIT_EXCHANGE,
-                  queue_name=RABBIT_QUEUE):
+                  queue_name=RABBIT_QUEUE,
+                  field_queue_name=RABBIT_FIELD_QUEUE):
     """
     Initialise connection to rabbitmq
 
@@ -27,12 +29,18 @@ def init_rabbitmq(binding_key=RABBIT_ROUTE,
     :param queue_name: The rabbitmq queue that subscribes to the exchange, (e.g.: "Case.Responses")
     :param binding_key: The binding key to associate the exchange and queue (e.g.: "Case.Responses.binding")
     :param queue_args: Arguments passed to the rabbitmq queue declaration
+    :param field_queue_name: The rabbit queue that the fwmt adapter subscribes to
     """
     rabbitmq_connection = _create_connection()
     channel = rabbitmq_connection.channel()
-    channel.exchange_declare(exchange=exchange_name, exchange_type='direct', durable=True)
+    channel.exchange_declare(exchange=exchange_name, exchange_type='topic', durable=True)
+
     channel.queue_declare(queue=queue_name, durable=True)
     channel.queue_bind(exchange=exchange_name, queue=queue_name, routing_key=binding_key)
+
+    channel.queue_declare(queue=field_queue_name, durable=True)
+    channel.queue_bind(exchange=exchange_name, queue=field_queue_name, routing_key=binding_key)
+
     logger.info('Successfully initialised rabbitmq', exchange=exchange_name, binding=binding_key)
 
 
@@ -44,7 +52,7 @@ def send_message_to_rabbitmq(message,
 
     :param message: The message to send to the queue in JSON format
     :param exchange_name: The rabbitmq exchange to publish to, (e.g.: "case-outbound-exchange")
-    :param routing_key: The direct route to a queue the message should be sent to (e.g.: "Case.Responses.binding")
+    :param routing_key:
     :return: boolean
     :raises: PublishMessageError
     """

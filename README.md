@@ -3,7 +3,8 @@
 
 ## Prerequisites
 
-* An existing durable rabbitmq exchange (e.g.: `case-outbound-exchange`) that can be used to publish messages which get routed to the RM Case Service (e.g.: `Case.Responses.binding`).
+* An existing durable rabbitmq exchange (e.g.: `events`) that can be used to publish messages which get routed to the RM Case Service (e.g.: `Case.Responses.binding`) 
+and to the FieldWorkAdapter.Responses
 
 * A GCS bucket with a [Cloud Pub/Sub notification configuration](https://cloud.google.com/storage/docs/reporting-changes).
 
@@ -78,7 +79,7 @@ SUBSCRIPTION_PROJECT_ID=[SUB_PROJECT_ID]
 RECEIPT_TOPIC_PROJECT_ID=[TOPIC_PROJECT_ID]
 GOOGLE_APPLICATION_CREDENTIALS=[/path/to/service/account/key.json]
 RABBIT_QUEUE=Case.Responses
-RABBIT_EXCHANGE=case-outbound-exchange
+RABBIT_EXCHANGE=events
 RABBIT_ROUTE=Case.Responses.binding
 RECEIPT_TOPIC_NAME=[TOPIC_NAME]
 READINESS_FILE_PATH=/tmp/pubsub_ready
@@ -139,7 +140,7 @@ SUBSCRIPTION_PROJECT_ID=project  # can be anything
 RECEIPT_TOPIC_PROJECT_ID=project  # can be anything
 PUBSUB_EMULATOR_HOST=localhost:8410  # taken from the env-init (above)
 RABBIT_QUEUE=Case.Responses
-RABBIT_EXCHANGE=case-outbound-exchange
+RABBIT_EXCHANGE=events
 RABBIT_ROUTE=Case.Responses.binding
 RECEIPT_TOPIC_NAME=eq-submission-topic
 SUBSCRIPTION_NAME=rm-receipt-subscription

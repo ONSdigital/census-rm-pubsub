@@ -20,7 +20,7 @@ client = SubscriberClient()
 
 def receipt_to_case(message: Message):
     """
-    Callback for handling new pubsub messages which attempts to publish a receipt to the case service
+    Callback for handling new pubsub messages which attempts to publish a receipt or refusal to the events exchange
 
     NB: any exceptions raised by this callback should nack the message by the future manager
     :param message: a GCP pubsub subscriber Message
@@ -29,7 +29,7 @@ def receipt_to_case(message: Message):
                       subscription_name=SUBSCRIPTION_NAME,
                       subscription_project=SUBSCRIPTION_PROJECT_ID)
     try:
-        if message.attributes['eventType'] != 'OBJECT_FINALIZE':  # receipt only on object creation
+        if message.attributes['eventType'] != 'OBJECT_FINALIZE':  # only forward on object creation
             log.error('Unknown Pub/Sub Message eventType', eventType=message.attributes['eventType'])
             return
         bucket_name, object_name = message.attributes['bucketId'], message.attributes['objectId']
