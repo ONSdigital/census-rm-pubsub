@@ -20,23 +20,23 @@ logger = wrap_logger(logging.getLogger(__name__))
 
 def init_rabbitmq(binding_key=RABBIT_ROUTE,
                   exchange_name=RABBIT_EXCHANGE,
-                  queue_name=RABBIT_CASE_QUEUE,
+                  case_queue=RABBIT_CASE_QUEUE,
                   field_queue_name=RABBIT_FIELD_QUEUE):
     """
     Initialise connection to rabbitmq
 
     :param exchange_name: The rabbitmq exchange to publish to, (e.g.: "case-outbound-exchange")
-    :param queue_name: The rabbitmq queue that subscribes to the exchange, (e.g.: "Case.Responses")
+    :param case_queue: The rabbitmq queue that subscribes to the exchange, (e.g.: "Case.Responses")
     :param binding_key: The binding key to associate the exchange and queue (e.g.: "Case.Responses.binding")
     :param queue_args: Arguments passed to the rabbitmq queue declaration
-    :param field_queue_name: The rabbit queue that the fwmt adapter subscribes to
+    :param field_queue_name: The queue that the fwmt adapter subscribes to Responses
     """
     rabbitmq_connection = _create_connection()
     channel = rabbitmq_connection.channel()
     channel.exchange_declare(exchange=exchange_name, exchange_type='topic', durable=True)
 
-    channel.queue_declare(queue=queue_name, durable=True)
-    channel.queue_bind(exchange=exchange_name, queue=queue_name, routing_key=binding_key)
+    channel.queue_declare(queue=case_queue, durable=True)
+    channel.queue_bind(exchange=exchange_name, queue=case_queue, routing_key=binding_key)
 
     channel.queue_declare(queue=field_queue_name, durable=True)
     channel.queue_bind(exchange=exchange_name, queue=field_queue_name, routing_key=binding_key)
@@ -67,11 +67,7 @@ def send_message_to_rabbitmq(message,
     rabbitmq_connection.close()
 
 
-def _create_connection(username=RABBIT_USERNAME,
-                       password=RABBIT_PASSWORD,
-                       host=RABBIT_HOST,
-                       port=RABBIT_PORT,
-                       virtualhost=RABBIT_VIRTUALHOST):
+def _create_connection():
     credentials = pika.PlainCredentials(RABBIT_USERNAME, RABBIT_PASSWORD)
     parameters = pika.ConnectionParameters(RABBIT_HOST, RABBIT_PORT, RABBIT_VIRTUALHOST, credentials)
 

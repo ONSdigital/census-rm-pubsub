@@ -52,7 +52,7 @@ class RabbitHelperTestCase(TestCase):
 
             init_rabbitmq(binding_key=self.binding_key,
                           exchange_name=self.rabbit_exchange,
-                          queue_name=self.case_queue)
+                          case_queue=self.case_queue)
 
             mock_pika.PlainCredentials.assert_called_once_with(self.rabbit_username, self.rabbit_password)
             mock_pika.ConnectionParameters.assert_called_once_with(
