@@ -5,7 +5,7 @@ import pika
 from structlog import wrap_logger
 
 RABBIT_EXCHANGE = os.getenv("RABBIT_EXCHANGE", "events")
-RABBIT_QUEUE = os.getenv("RABBIT_QUEUE", "Case.Responses")
+RABBIT_CASE_QUEUE = os.getenv("RABBIT_CASE_QUEUE", "Case.Responses")
 RABBIT_FIELD_QUEUE = os.getenv("RABBIT_FIELD_QUEUE", "FieldWorkAdapter.Responses")
 RABBIT_ROUTE = os.getenv("RABBIT_ROUTING_KEY", "Case.Responses.binding")
 
@@ -20,7 +20,7 @@ logger = wrap_logger(logging.getLogger(__name__))
 
 def init_rabbitmq(binding_key=RABBIT_ROUTE,
                   exchange_name=RABBIT_EXCHANGE,
-                  queue_name=RABBIT_QUEUE,
+                  queue_name=RABBIT_CASE_QUEUE,
                   field_queue_name=RABBIT_FIELD_QUEUE):
     """
     Initialise connection to rabbitmq
