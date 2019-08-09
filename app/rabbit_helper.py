@@ -21,7 +21,7 @@ logger = wrap_logger(logging.getLogger(__name__))
 def init_rabbitmq(binding_key=RABBIT_ROUTE,
                   exchange_name=RABBIT_EXCHANGE,
                   case_queue=RABBIT_CASE_QUEUE,
-                  field_queue_name=RABBIT_FIELD_QUEUE):
+                  field_queue=RABBIT_FIELD_QUEUE):
     """
     Initialise connection to rabbitmq
 
@@ -38,8 +38,8 @@ def init_rabbitmq(binding_key=RABBIT_ROUTE,
     channel.queue_declare(queue=case_queue, durable=True)
     channel.queue_bind(exchange=exchange_name, queue=case_queue, routing_key=binding_key)
 
-    channel.queue_declare(queue=field_queue_name, durable=True)
-    channel.queue_bind(exchange=exchange_name, queue=field_queue_name, routing_key=binding_key)
+    channel.queue_declare(queue=field_queue, durable=True)
+    channel.queue_bind(exchange=exchange_name, queue=field_queue, routing_key=binding_key)
 
     logger.info('Successfully initialised rabbitmq', exchange=exchange_name, binding=binding_key)
 
@@ -51,7 +51,7 @@ def send_message_to_rabbitmq(message,
     Send message to rabbitmq
 
     :param message: The message to send to the queue in JSON format
-    :param exchange_name: The rabbitmq exchange to publish to, (e.g.: "case-outbound-exchange")
+    :param exchange_name: The rabbitmq exchange to publish to, (e.g.: "events")
     :param routing_key:
     :return: boolean
     :raises: PublishMessageError

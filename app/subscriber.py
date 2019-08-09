@@ -20,7 +20,7 @@ client = SubscriberClient()
 
 def receipt_to_case(message: Message):
     """
-    Callback for handling new pubsub messages which attempts to publish a receipt or refusal to the events exchange
+    Callback for handling new pubsub messages which attempts to publish a receipt to the events exchange
 
     NB: any exceptions raised by this callback should nack the message by the future manager
     :param message: a GCP pubsub subscriber Message
