@@ -38,6 +38,6 @@ services:
     - PUBSUB_EMULATOR_HOST=pubsub-emulator:8539
     - RABBIT_CASE_QUEUE=Case.Responses
     - RABBIT_EXCHANGE=events
-    - RABBIT_ROUTE=Case.Responses.binding
+    - RABBIT_ROUTE=event.response.receipt
     - RECEIPT_TOPIC_NAME=eq-submission-topic
     - SUBSCRIPTION_NAME=rm-receipt-subscription

@@ -7,7 +7,7 @@ from structlog import wrap_logger
 RABBIT_EXCHANGE = os.getenv("RABBIT_EXCHANGE", "events")
 RABBIT_CASE_QUEUE = os.getenv("RABBIT_CASE_QUEUE", "Case.Responses")
 RABBIT_FIELD_QUEUE = os.getenv("RABBIT_FIELD_QUEUE", "FieldWorkAdapter.Responses")
-RABBIT_ROUTE = os.getenv("RABBIT_ROUTING_KEY", "Case.Responses.binding")
+RABBIT_ROUTE = os.getenv("RABBIT_ROUTING_KEY", "event.response.receipt")
 
 RABBIT_HOST = os.getenv("RABBIT_HOST", "localhost")
 RABBIT_PORT = os.getenv("RABBIT_PORT", "6672")
@@ -27,8 +27,7 @@ def init_rabbitmq(binding_key=RABBIT_ROUTE,
 
     :param exchange_name: The rabbitmq exchange to publish to, (e.g.: "case-outbound-exchange")
     :param case_queue: The rabbitmq queue that subscribes to the exchange, (e.g.: "Case.Responses")
-    :param binding_key: The binding key to associate the exchange and queue (e.g.: "Case.Responses.binding")
-    :param queue_args: Arguments passed to the rabbitmq queue declaration
+    :param binding_key: The binding key to associate the exchange and queue (e.g.: "event.response.receipt")
     :param field_queue_name: The queue that the fwmt adapter subscribes to Responses
     """
     rabbitmq_connection = _create_connection()

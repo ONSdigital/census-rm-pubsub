@@ -13,7 +13,7 @@ RECEIPT_TOPIC_PROJECT_ID = "project"
 RABBIT_CASE_QUEUE = "Case.Responses"
 RABBIT_FIELD_QUEUE = os.getenv("RABBIT_FIELD_QUEUE", "FieldWorkAdapter.Responses")
 RABBIT_EXCHANGE = "events"
-RABBIT_ROUTE = "Case.Responses.binding"
+RABBIT_ROUTE = "event.response.receipt"
 RECEIPT_TOPIC_NAME = "eq-submission-topic"
 
 
