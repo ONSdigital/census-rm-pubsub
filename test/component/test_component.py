@@ -10,9 +10,10 @@ from google.cloud import pubsub_v1
 
 RABBIT_AMQP = "amqp://guest:guest@localhost:35672"
 RECEIPT_TOPIC_PROJECT_ID = "project"
-RABBIT_QUEUE = "Case.Responses"
-RABBIT_EXCHANGE = "case-outbound-exchange"
-RABBIT_ROUTE = "Case.Responses.binding"
+RABBIT_CASE_QUEUE = "Case.Responses"
+RABBIT_FIELD_QUEUE = os.getenv("RABBIT_FIELD_QUEUE", "FieldWorkAdapter.Responses")
+RABBIT_EXCHANGE = "events"
+RABBIT_ROUTE = "event.response.receipt"
 RECEIPT_TOPIC_NAME = "eq-submission-topic"
 
 
@@ -20,7 +21,7 @@ class CensusRMPubSubComponentTest(TestCase):
 
     def setUp(self):
         os.environ["PUBSUB_EMULATOR_HOST"] = "localhost:8539"
-        self.purge_rabbit_queue()
+        self.purge_rabbit_queues()
 
     def test_e2e_with_sucessful_msg(self):
         expected_case_id = str(uuid.uuid4())
@@ -48,7 +49,10 @@ class CensusRMPubSubComponentTest(TestCase):
         self.init_rabbitmq()
         assert self.queue_declare_result.method.message_count == 1, "Expected 1 message to be on rabbitmq queue"
 
-        actual_msg_body_str = self.get_msg_body_from_rabbit(self.channel)
+        case_msg = self.get_msg_body_from_rabbit(RABBIT_CASE_QUEUE)
+        assert expected_msg == case_msg, "RabbitMQ message text incorrect"
+
+        actual_msg_body_str = self.get_msg_body_from_rabbit(RABBIT_FIELD_QUEUE)
         assert expected_msg == actual_msg_body_str, "RabbitMQ message text incorrect"
 
     def test_e2e_with_no_case_id(self):
@@ -76,15 +80,19 @@ class CensusRMPubSubComponentTest(TestCase):
         self.init_rabbitmq()
         assert self.queue_declare_result.method.message_count == 1, "Expected 1 message to be on rabbitmq queue"
 
-        actual_msg_body_str = self.get_msg_body_from_rabbit(self.channel)
+        actual_msg_body_str = self.get_msg_body_from_rabbit(RABBIT_CASE_QUEUE)
         assert expected_msg == actual_msg_body_str, "RabbitMQ message text incorrect"
 
-    def purge_rabbit_queue(self):
-        self.init_rabbitmq()
-        self.channel.queue_purge(queue=RABBIT_QUEUE)
+        actual_msg_body_str = self.get_msg_body_from_rabbit(RABBIT_FIELD_QUEUE)
+        assert expected_msg == actual_msg_body_str, "RabbitMQ message text incorrect"
 
-    def get_msg_body_from_rabbit(self, channel):
-        actual_msg = channel.basic_get(queue=RABBIT_QUEUE)
+    def purge_rabbit_queues(self):
+        self.init_rabbitmq()
+        self.channel.queue_purge(queue=RABBIT_CASE_QUEUE)
+        self.channel.queue_purge(queue=RABBIT_FIELD_QUEUE)
+
+    def get_msg_body_from_rabbit(self, rabbit_queue):
+        actual_msg = self.channel.basic_get(rabbit_queue)
         return actual_msg[2].decode('utf-8')
 
     def publish_to_pubsub(self, tx_id, questionnaire_id, case_id=None):
@@ -122,12 +130,11 @@ class CensusRMPubSubComponentTest(TestCase):
     def init_rabbitmq(self, rabbitmq_amqp=RABBIT_AMQP,
                       binding_key=RABBIT_ROUTE,
                       exchange_name=RABBIT_EXCHANGE,
-                      queue_name=RABBIT_QUEUE):
+                      queue_name=RABBIT_CASE_QUEUE):
         rabbitmq_connection = pika.BlockingConnection(pika.URLParameters(rabbitmq_amqp))
         channel = rabbitmq_connection.channel()
-        channel.exchange_declare(exchange=exchange_name, exchange_type='direct', durable=True)
+        channel.exchange_declare(exchange=exchange_name, exchange_type='topic', durable=True)
         queue_declare_result = channel.queue_declare(queue=queue_name, durable=True)
         channel.queue_bind(exchange=exchange_name, queue=queue_name, routing_key=binding_key)
         self.channel = channel
         self.queue_declare_result = queue_declare_result
-        return
