@@ -3,8 +3,8 @@
 
 ## Prerequisites
 
-* An existing durable rabbitmq exchange (e.g.: `events`) that can be used to publish messages which get routed to the RM Case Service (e.g.: `event.response.receipt`) 
-and to the FieldWorkAdapter.Responses
+* An existing durable rabbitmq exchange (e.g.: `events`) that can be used to publish messages which get routed to the case service 
+ and fwmtadapter (e.g.: `event.response.receipt`) 
 
 * A GCS bucket with a [Cloud Pub/Sub notification configuration](https://cloud.google.com/storage/docs/reporting-changes).
 
