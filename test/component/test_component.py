@@ -10,8 +10,7 @@ from google.cloud import pubsub_v1
 
 RABBIT_AMQP = "amqp://guest:guest@localhost:35672"
 RECEIPT_TOPIC_PROJECT_ID = "project"
-RABBIT_CASE_QUEUE = "Case.Responses"
-RABBIT_FIELD_QUEUE = os.getenv("RABBIT_FIELD_QUEUE", "FieldWorkAdapter.Responses")
+RABBIT_TEST_QUEUE = "test.case"
 RABBIT_EXCHANGE = "events"
 RABBIT_ROUTE = "event.response.receipt"
 RECEIPT_TOPIC_NAME = "eq-submission-topic"
@@ -49,11 +48,8 @@ class CensusRMPubSubComponentTest(TestCase):
         self.init_rabbitmq()
         assert self.queue_declare_result.method.message_count == 1, "Expected 1 message to be on rabbitmq queue"
 
-        case_msg = self.get_msg_body_from_rabbit(RABBIT_CASE_QUEUE)
+        case_msg = self.get_msg_body_from_rabbit(RABBIT_TEST_QUEUE)
         assert expected_msg == case_msg, "RabbitMQ message text incorrect"
-
-        actual_msg_body_str = self.get_msg_body_from_rabbit(RABBIT_FIELD_QUEUE)
-        assert expected_msg == actual_msg_body_str, "RabbitMQ message text incorrect"
 
     def test_e2e_with_no_case_id(self):
         expected_tx_id = str(uuid.uuid4())
@@ -80,16 +76,12 @@ class CensusRMPubSubComponentTest(TestCase):
         self.init_rabbitmq()
         assert self.queue_declare_result.method.message_count == 1, "Expected 1 message to be on rabbitmq queue"
 
-        actual_msg_body_str = self.get_msg_body_from_rabbit(RABBIT_CASE_QUEUE)
-        assert expected_msg == actual_msg_body_str, "RabbitMQ message text incorrect"
-
-        actual_msg_body_str = self.get_msg_body_from_rabbit(RABBIT_FIELD_QUEUE)
+        actual_msg_body_str = self.get_msg_body_from_rabbit(RABBIT_TEST_QUEUE)
         assert expected_msg == actual_msg_body_str, "RabbitMQ message text incorrect"
 
     def purge_rabbit_queues(self):
         self.init_rabbitmq()
-        self.channel.queue_purge(queue=RABBIT_CASE_QUEUE)
-        self.channel.queue_purge(queue=RABBIT_FIELD_QUEUE)
+        self.channel.queue_purge(queue=RABBIT_TEST_QUEUE)
 
     def get_msg_body_from_rabbit(self, rabbit_queue):
         actual_msg = self.channel.basic_get(rabbit_queue)
@@ -130,7 +122,7 @@ class CensusRMPubSubComponentTest(TestCase):
     def init_rabbitmq(self, rabbitmq_amqp=RABBIT_AMQP,
                       binding_key=RABBIT_ROUTE,
                       exchange_name=RABBIT_EXCHANGE,
-                      queue_name=RABBIT_CASE_QUEUE):
+                      queue_name=RABBIT_TEST_QUEUE):
         rabbitmq_connection = pika.BlockingConnection(pika.URLParameters(rabbitmq_amqp))
         channel = rabbitmq_connection.channel()
         channel.exchange_declare(exchange=exchange_name, exchange_type='topic', durable=True)

@@ -3,8 +3,8 @@
 
 ## Prerequisites
 
-* An existing durable rabbitmq exchange (e.g.: `events`) that can be used to publish messages which get routed to the RM Case Service (e.g.: `event.response.receipt`) 
-and to the FieldWorkAdapter.Responses
+* An existing durable rabbitmq exchange (e.g.: `events`) that can be used to publish messages which get routed to the case service 
+ and fwmtadapter (e.g.: `event.response.receipt`) 
 
 * A GCS bucket with a [Cloud Pub/Sub notification configuration](https://cloud.google.com/storage/docs/reporting-changes).
 
@@ -17,7 +17,6 @@ and to the FieldWorkAdapter.Responses
 	RABBIT_VIRTUALHOST
 	RABBIT_USERNAME
 	RABBIT_PASSWORD
-	RABBIT_CASE_QUEUE
 	RABBIT_EXCHANGE
 	RABBIT_ROUTE
 	RECEIPT_TOPIC_NAME
@@ -78,7 +77,6 @@ RABBIT_PASSWORD=guest
 SUBSCRIPTION_PROJECT_ID=[SUB_PROJECT_ID]
 RECEIPT_TOPIC_PROJECT_ID=[TOPIC_PROJECT_ID]
 GOOGLE_APPLICATION_CREDENTIALS=[/path/to/service/account/key.json]
-RABBIT_CASE_QUEUE=Case.Responses
 RABBIT_EXCHANGE=events
 RABBIT_ROUTE=event.response.receipt
 RECEIPT_TOPIC_NAME=[TOPIC_NAME]
@@ -139,7 +137,6 @@ RABBIT_PASSWORD=guest
 SUBSCRIPTION_PROJECT_ID=project  # can be anything
 RECEIPT_TOPIC_PROJECT_ID=project  # can be anything
 PUBSUB_EMULATOR_HOST=localhost:8410  # taken from the env-init (above)
-RABBIT_CASE_QUEUE=Case.Responses
 RABBIT_EXCHANGE=events
 RABBIT_ROUTE=event.response.receipt
 RECEIPT_TOPIC_NAME=eq-submission-topic

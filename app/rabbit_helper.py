@@ -5,8 +5,6 @@ import pika
 from structlog import wrap_logger
 
 RABBIT_EXCHANGE = os.getenv("RABBIT_EXCHANGE", "events")
-RABBIT_CASE_QUEUE = os.getenv("RABBIT_CASE_QUEUE", "Case.Responses")
-RABBIT_FIELD_QUEUE = os.getenv("RABBIT_FIELD_QUEUE", "FieldWorkAdapter.Responses")
 RABBIT_ROUTE = os.getenv("RABBIT_ROUTING_KEY", "event.response.receipt")
 
 RABBIT_HOST = os.getenv("RABBIT_HOST", "localhost")
@@ -18,29 +16,16 @@ RABBIT_PASSWORD = os.getenv("RABBIT_PASSWORD", "guest")
 logger = wrap_logger(logging.getLogger(__name__))
 
 
-def init_rabbitmq(binding_key=RABBIT_ROUTE,
-                  exchange_name=RABBIT_EXCHANGE,
-                  case_queue=RABBIT_CASE_QUEUE,
-                  field_queue=RABBIT_FIELD_QUEUE):
+def init_rabbitmq(exchange_name=RABBIT_EXCHANGE):
     """
     Initialise connection to rabbitmq
-
-    :param exchange_name: The rabbitmq exchange to publish to, (e.g.: "case-outbound-exchange")
-    :param case_queue: The rabbitmq queue that subscribes to the exchange, (e.g.: "Case.Responses")
-    :param binding_key: The binding key to associate the exchange and queue (e.g.: "event.response.receipt")
-    :param field_queue_name: The queue that the fwmt adapter subscribes to Responses
+    :param exchange_name: The rabbitmq exchange to publish to, (e.g.: "events")
     """
     rabbitmq_connection = _create_connection()
     channel = rabbitmq_connection.channel()
     channel.exchange_declare(exchange=exchange_name, exchange_type='topic', durable=True)
 
-    channel.queue_declare(queue=case_queue, durable=True)
-    channel.queue_bind(exchange=exchange_name, queue=case_queue, routing_key=binding_key)
-
-    channel.queue_declare(queue=field_queue, durable=True)
-    channel.queue_bind(exchange=exchange_name, queue=field_queue, routing_key=binding_key)
-
-    logger.info('Successfully initialised rabbitmq', exchange=exchange_name, binding=binding_key)
+    logger.info('Successfully initialised rabbitmq', exchange=exchange_name)
 
 
 def send_message_to_rabbitmq(message,
@@ -49,7 +34,7 @@ def send_message_to_rabbitmq(message,
     """
     Send message to rabbitmq
 
-    :param message: The message to send to the queue in JSON format
+    :param message: The message to send to the exchange in JSON format
     :param exchange_name: The rabbitmq exchange to publish to, (e.g.: "events")
     :param routing_key:
     :return: boolean
