@@ -17,8 +17,6 @@ class RabbitHelperTestCase(TestCase):
     rabbit_virtualhost = '/'
 
     binding_key = "test.binding"
-    case_queue = "test.queue"
-    field_queue = "field.queue"
     rabbit_exchange = "test-exchange"
     property_class = 'property_class'
     rabbit_url = 'rabbit_url'
@@ -33,9 +31,7 @@ class RabbitHelperTestCase(TestCase):
             'RABBIT_PORT': self.rabbit_port,
             'RABBIT_VIRTUALHOST': self.rabbit_virtualhost,
             'RABBIT_ROUTING_KEY': self.binding_key,
-            'RABBIT_CASE_QUEUE': self.case_queue,
             'RABBIT_EXCHANGE': self.rabbit_exchange,
-            'RABBIT_FIELD_QUEUE': self.field_queue
         }
         os.environ.update(test_environment_variables)
 
@@ -50,9 +46,7 @@ class RabbitHelperTestCase(TestCase):
             channel_mock = MagicMock()
             connection_mock.channel = create_stub_function(return_value=channel_mock)
 
-            init_rabbitmq(binding_key=self.binding_key,
-                          exchange_name=self.rabbit_exchange,
-                          case_queue=self.case_queue)
+            init_rabbitmq(exchange_name=self.rabbit_exchange)
 
             mock_pika.PlainCredentials.assert_called_once_with(self.rabbit_username, self.rabbit_password)
             mock_pika.ConnectionParameters.assert_called_once_with(
@@ -61,20 +55,6 @@ class RabbitHelperTestCase(TestCase):
             channel_mock.exchange_declare.assert_called_once_with(exchange=self.rabbit_exchange, exchange_type='topic',
                                                                   durable=True)
 
-            channel_mock.queue_declare.assert_any_call(durable=True,
-                                                       queue=self.case_queue)
-
-            channel_mock.queue_bind.assert_any_call(exchange=self.rabbit_exchange,
-                                                    queue=self.case_queue,
-                                                    routing_key=self.binding_key)
-
-            channel_mock.queue_declare.assert_any_call(durable=True,
-                                                       queue=self.field_queue)
-
-            channel_mock.queue_bind.assert_any_call(exchange=self.rabbit_exchange,
-                                                    queue=self.field_queue,
-                                                    routing_key=self.binding_key)
-
     def test_initialise_messaging_rabbit_fails(self):
         from app.rabbit_helper import init_rabbitmq
 
@@ -82,7 +62,7 @@ class RabbitHelperTestCase(TestCase):
             with patch('pika.BlockingConnection', side_effect=AMQPConnectionError):
                 init_rabbitmq()
 
-    def test_send_to_rabbitmq_queue(self):
+    def test_send_to_rabbitmq_exchange(self):
         from app.rabbit_helper import send_message_to_rabbitmq
 
         with patch('app.rabbit_helper.pika') as mock_pika:
