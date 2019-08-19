@@ -40,3 +40,5 @@ services:
     - RABBIT_ROUTE=event.response.receipt
     - RECEIPT_TOPIC_NAME=eq-submission-topic
     - SUBSCRIPTION_NAME=rm-receipt-subscription
+    - OFFLINE_RECEIPT_TOPIC_NAME=offline-receipt-topic
+    - OFFLINE_SUBSCRIPTION_NAME=rm-offline-receipt-subscription

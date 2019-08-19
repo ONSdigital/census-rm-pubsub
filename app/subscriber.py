@@ -83,10 +83,47 @@ def receipt_to_case(message: Message):
 
 def offline_receipt_to_case(message: Message):
     log = logger.bind(message_id=message.message_id,
-                      subscription_name=SUBSCRIPTION_NAME,
+                      subscription_name=OFFLINE_SUBSCRIPTION_NAME,
                       subscription_project=SUBSCRIPTION_PROJECT_ID)
-    log.info('testing')
-    pass
+
+    log.info('Pub/Sub Message received for processing')
+
+    try:
+        payload = json.loads(message.data)  # parse metadata as JSON payload
+        tx_id, questionnaire_id, channel = payload['transactionId'], payload['questionnaireId'], payload['channel']
+        time_obj_created = parse_datetime(payload['dateTime']).isoformat()
+    except (TypeError, json.JSONDecodeError):
+        log.error('Pub/Sub Message data not JSON')
+        return
+    except KeyError as e:
+        log.error('Pub/Sub Message missing required data', missing_json_key=e.args[0])
+        return
+    except ValueError:
+        log.error('Pub/Sub Message has invalid RFC 3339 timeCreated datetime string')
+        return
+
+    log = log.bind(questionnaire_id=questionnaire_id, created=time_obj_created, tx_id=tx_id, channel=channel)
+
+    receipt_message = {
+        'event': {
+            'type': 'RESPONSE_RECEIVED',
+            'source': 'RECEIPT_SERVICE',
+            'channel': channel,
+            'dateTime': time_obj_created,
+            'transactionId': tx_id
+        },
+        'payload': {
+            'response': {
+                'questionnaireId': questionnaire_id,
+                'unreceipt': False
+            }
+        }
+    }
+
+    send_message_to_rabbitmq(json.dumps(receipt_message))
+    message.ack()
+
+    log.info('Message processing complete')
 
 
 def setup_subscription(subscription_name=SUBSCRIPTION_NAME,
