@@ -12,6 +12,7 @@ class TestSubscriber(TestCase):
     subscription_name = 'test-subscription'
     offline_subscription_name = 'test-offline-subscription'
     subscription_project_id = 'test-project-id'
+    offline_subscription_project_id = 'test-offline-project-id'
     case_id = 'e079cea4-1447-4529-aa70-8757f1806f60'
     questionnaire_id = '0120000000001000'
     created = '2008-08-24T00:00:00Z'
@@ -82,6 +83,7 @@ class TestSubscriber(TestCase):
             'SUBSCRIPTION_NAME': self.subscription_name,
             'OFFLINE_SUBSCRIPTION_NAME': self.offline_subscription_name,
             'SUBSCRIPTION_PROJECT_ID': self.subscription_project_id,
+            'OFFLINE_SUBSCRIPTION_PROJECT_ID': self.offline_subscription_project_id
         }
         os.environ.update(test_environment_variables)
 
@@ -169,7 +171,7 @@ class TestSubscriber(TestCase):
             'tx_id': '1',
             'channel': 'PQRS',
             'subscription_name': self.offline_subscription_name,
-            'subscription_project': self.subscription_project_id,
+            'subscription_project': self.offline_subscription_project_id,
             'message_id': mock_message.message_id
         }
 

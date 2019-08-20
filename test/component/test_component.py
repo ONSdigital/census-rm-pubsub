@@ -10,6 +10,7 @@ from google.cloud import pubsub_v1
 
 RABBIT_AMQP = "amqp://guest:guest@localhost:35672"
 RECEIPT_TOPIC_PROJECT_ID = "project"
+OFFLINE_RECEIPT_TOPIC_PROJECT_ID = "offline-project"
 RABBIT_TEST_QUEUE = "test.case"
 RABBIT_EXCHANGE = "events"
 RABBIT_ROUTE = "event.response.receipt"
@@ -150,7 +151,7 @@ class CensusRMPubSubComponentTest(TestCase):
     def publish_offline_to_pubsub(self, tx_id, questionnaire_id):
         publisher = pubsub_v1.PublisherClient()
 
-        topic_path = publisher.topic_path(RECEIPT_TOPIC_PROJECT_ID, OFFLINE_RECEIPT_TOPIC_NAME)
+        topic_path = publisher.topic_path(OFFLINE_RECEIPT_TOPIC_PROJECT_ID, OFFLINE_RECEIPT_TOPIC_NAME)
 
         datadict = {"dateTime": "2008-08-24T00:00:00Z", "productCode": "H1", "channel": "PQRS",
                     "questionnaireId": questionnaire_id,

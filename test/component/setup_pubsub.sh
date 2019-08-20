@@ -24,11 +24,11 @@ wait_for_curl_success() {
 }
 
 wait_for_curl_success "http://localhost:8539/v1/projects/project/topics/eq-submission-topic" "PUT" "pubsub_emulator topic"
-wait_for_curl_success "http://localhost:8539/v1/projects/project/topics/offline-receipt-topic" "PUT" "pubsub_emulator topic"
+wait_for_curl_success "http://localhost:8539/v1/projects/offline-project/topics/offline-receipt-topic" "PUT" "pubsub_emulator topic"
 
 echo "Setting up subscriptions to topics..."
 curl -X PUT http://localhost:8539/v1/projects/project/subscriptions/rm-receipt-subscription -H 'Content-Type: application/json' -d '{"topic": "projects/project/topics/eq-submission-topic"}'
-curl -X PUT http://localhost:8539/v1/projects/project/subscriptions/rm-offline-receipt-subscription -H 'Content-Type: application/json' -d '{"topic": "projects/project/topics/offline-receipt-topic"}'
+curl -X PUT http://localhost:8539/v1/projects/offline-project/subscriptions/rm-offline-receipt-subscription -H 'Content-Type: application/json' -d '{"topic": "projects/offline-project/topics/offline-receipt-topic"}'
 
 wait_for_curl_success "http://guest:guest@localhost:49672/api/aliveness-test/%2F" "GET" "rabbit_mq"
 

@@ -14,6 +14,7 @@ from app.rabbit_helper import send_message_to_rabbitmq
 SUBSCRIPTION_NAME = os.getenv("SUBSCRIPTION_NAME", "rm-receipt-subscription")
 OFFLINE_SUBSCRIPTION_NAME = os.getenv("OFFLINE_SUBSCRIPTION_NAME", "rm-offline-receipt-subscription")
 SUBSCRIPTION_PROJECT_ID = os.getenv("SUBSCRIPTION_PROJECT_ID")
+OFFLINE_SUBSCRIPTION_PROJECT_ID = os.getenv("OFFLINE_SUBSCRIPTION_PROJECT_ID")
 
 logger = wrap_logger(logging.getLogger(__name__))
 client = SubscriberClient()
@@ -84,7 +85,7 @@ def receipt_to_case(message: Message):
 def offline_receipt_to_case(message: Message):
     log = logger.bind(message_id=message.message_id,
                       subscription_name=OFFLINE_SUBSCRIPTION_NAME,
-                      subscription_project=SUBSCRIPTION_PROJECT_ID)
+                      subscription_project=OFFLINE_SUBSCRIPTION_PROJECT_ID)
 
     log.info('Pub/Sub Message received for processing')
 
