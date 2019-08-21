@@ -1,8 +1,7 @@
 import logging
 import os
-import threading
-import time
 
+from concurrent.futures import ThreadPoolExecutor
 from structlog import wrap_logger
 
 from app.app_logging import logger_initial_config
@@ -28,11 +27,9 @@ def main():
 
     with Readiness(os.getenv('READINESS_FILE_PATH',
                              os.path.join(os.getcwd(), 'pubsub-ready'))):  # Indicate ready after successful setup
-        for subscriber_future in futures:
-            thread = threading.Thread(target=subscriber_future.result, kwargs={"timeout": None}, daemon=True)
-            thread.start()
-        while True:  # setup_subscription creates a background thread for processing messages
-            time.sleep(30)
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            for background_pubsub_task in futures:
+                executor.submit(background_pubsub_task.result, timeout=None)
 
 
 if __name__ == '__main__':
