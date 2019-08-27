@@ -1,12 +1,12 @@
 import logging
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from concurrent.futures import ThreadPoolExecutor
 from structlog import wrap_logger
 
 from app.app_logging import logger_initial_config
-from app.readiness import Readiness
 from app.rabbit_helper import init_rabbitmq
+from app.readiness import Readiness
 from app.subscriber import setup_subscription, OFFLINE_SUBSCRIPTION_NAME, offline_receipt_to_case, \
     OFFLINE_SUBSCRIPTION_PROJECT_ID
 
@@ -24,12 +24,16 @@ def main():
     futures = [setup_subscription(),
                setup_subscription(subscription_name=OFFLINE_SUBSCRIPTION_NAME, callback=offline_receipt_to_case,
                                   subscription_project_id=OFFLINE_SUBSCRIPTION_PROJECT_ID)]
+    executor_futures = []
 
     with Readiness(os.getenv('READINESS_FILE_PATH',
                              os.path.join(os.getcwd(), 'pubsub-ready'))):  # Indicate ready after successful setup
         with ThreadPoolExecutor(max_workers=2) as executor:
             for background_pubsub_task in futures:
-                executor.submit(background_pubsub_task.result, timeout=None)
+                executor_futures.append(executor.submit(background_pubsub_task.result, timeout=None))
+
+        with as_completed(executor_futures) as finished_future:
+            raise finished_future.exception(timeout=0) or RuntimeError('Thead exited unexpectedly')
 
 
 if __name__ == '__main__':
