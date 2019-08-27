@@ -52,9 +52,6 @@ class RabbitHelperTestCase(TestCase):
             mock_pika.ConnectionParameters.assert_called_once_with(
                 self.rabbit_host, self.rabbit_port, self.rabbit_virtualhost, mock_pika.PlainCredentials.return_value)
 
-            channel_mock.exchange_declare.assert_called_once_with(exchange=self.rabbit_exchange, exchange_type='topic',
-                                                                  durable=True)
-
     def test_initialise_messaging_rabbit_fails(self):
         from app.rabbit_helper import init_rabbitmq
 

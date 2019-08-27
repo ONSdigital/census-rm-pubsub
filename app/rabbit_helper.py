@@ -22,8 +22,7 @@ def init_rabbitmq(exchange_name=RABBIT_EXCHANGE):
     :param exchange_name: The rabbitmq exchange to publish to, (e.g.: "events")
     """
     rabbitmq_connection = _create_connection()
-    channel = rabbitmq_connection.channel()
-    channel.exchange_declare(exchange=exchange_name, exchange_type='topic', durable=True)
+    _ = rabbitmq_connection.channel()
 
     logger.info('Successfully initialised rabbitmq', exchange=exchange_name)
 
