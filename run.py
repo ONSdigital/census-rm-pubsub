@@ -31,9 +31,8 @@ def main():
         with ThreadPoolExecutor(max_workers=2) as executor:
             for background_pubsub_task in futures:
                 executor_futures.append(executor.submit(background_pubsub_task.result, timeout=None))
-
-        with as_completed(executor_futures) as finished_future:
-            raise finished_future.exception(timeout=0) or RuntimeError('Thead exited unexpectedly')
+            with as_completed(executor_futures) as finished_future:
+                raise finished_future.exception(timeout=0) or RuntimeError('Thead exited unexpectedly')
 
 
 if __name__ == '__main__':
