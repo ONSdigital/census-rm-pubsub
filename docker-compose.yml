@@ -35,8 +35,12 @@ services:
     - RABBIT_PASSWORD=guest
     - SUBSCRIPTION_PROJECT_ID=project
     - RECEIPT_TOPIC_PROJECT_ID=project
+    - OFFLINE_SUBSCRIPTION_PROJECT_ID=offline-project
+    - OFFLINE_RECEIPT_TOPIC_PROJECT_ID=offline-project
     - PUBSUB_EMULATOR_HOST=pubsub-emulator:8539
     - RABBIT_EXCHANGE=events
     - RABBIT_ROUTE=event.response.receipt
     - RECEIPT_TOPIC_NAME=eq-submission-topic
     - SUBSCRIPTION_NAME=rm-receipt-subscription
+    - OFFLINE_RECEIPT_TOPIC_NAME=offline-receipt-topic
+    - OFFLINE_SUBSCRIPTION_NAME=rm-offline-receipt-subscription
