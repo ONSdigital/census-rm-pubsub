@@ -10,10 +10,12 @@ from google.cloud import pubsub_v1
 
 RABBIT_AMQP = "amqp://guest:guest@localhost:35672"
 RECEIPT_TOPIC_PROJECT_ID = "project"
+OFFLINE_RECEIPT_TOPIC_PROJECT_ID = "offline-project"
 RABBIT_TEST_QUEUE = "test.case"
 RABBIT_EXCHANGE = "events"
 RABBIT_ROUTE = "event.response.receipt"
 RECEIPT_TOPIC_NAME = "eq-submission-topic"
+OFFLINE_RECEIPT_TOPIC_NAME = "offline-receipt-topic"
 
 
 class CensusRMPubSubComponentTest(TestCase):
@@ -39,6 +41,33 @@ class CensusRMPubSubComponentTest(TestCase):
             "payload": {
                 "response": {
                     "caseId": expected_case_id,
+                    "questionnaireId": expected_q_id,
+                    "unreceipt": False
+                }
+            }
+        })
+
+        self.init_rabbitmq()
+        assert self.queue_declare_result.method.message_count == 1, "Expected 1 message to be on rabbitmq queue"
+
+        case_msg = self.get_msg_body_from_rabbit(RABBIT_TEST_QUEUE)
+        assert expected_msg == case_msg, "RabbitMQ message text incorrect"
+
+    def test_offline_e2e_with_sucessful_msg(self):
+        expected_tx_id = str(uuid.uuid4())
+        expected_q_id = str(uuid.uuid4())
+        self.publish_offline_to_pubsub(expected_tx_id, expected_q_id)
+
+        expected_msg = json.dumps({
+            "event": {
+                "type": "RESPONSE_RECEIVED",
+                "source": "RECEIPT_SERVICE",
+                "channel": "PQRS",
+                "dateTime": "2008-08-24T00:00:00+00:00",
+                "transactionId": expected_tx_id
+            },
+            "payload": {
+                "response": {
                     "questionnaireId": expected_q_id,
                     "unreceipt": False
                 }
@@ -110,6 +139,29 @@ class CensusRMPubSubComponentTest(TestCase):
                                    eventType='OBJECT_FINALIZE',
                                    bucketId='123',
                                    objectId=tx_id)
+        if not future.done():
+            time.sleep(1)
+        try:
+            future.result(timeout=30)
+        except GoogleAPIError:
+            assert False, "Failed to publish message to pubsub"
+
+        print(f'Message published to {topic_path}')
+
+    def publish_offline_to_pubsub(self, tx_id, questionnaire_id):
+        publisher = pubsub_v1.PublisherClient()
+
+        topic_path = publisher.topic_path(OFFLINE_RECEIPT_TOPIC_PROJECT_ID, OFFLINE_RECEIPT_TOPIC_NAME)
+
+        datadict = {"dateTime": "2008-08-24T00:00:00Z", "productCode": "H1", "channel": "PQRS",
+                    "questionnaireId": questionnaire_id,
+                    "source": "RECEIPT-SERVICE", "type": "FULFILMENT_CONFIRMED",
+                    "transactionId": tx_id}
+
+        data = json.dumps(datadict)
+
+        future = publisher.publish(topic_path,
+                                   data=data.encode('utf-8'))
         if not future.done():
             time.sleep(1)
         try:

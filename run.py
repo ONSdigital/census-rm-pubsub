@@ -1,14 +1,14 @@
 import logging
 import os
-import time
+from time import sleep
 
 from structlog import wrap_logger
 
 from app.app_logging import logger_initial_config
-from app.readiness import Readiness
 from app.rabbit_helper import init_rabbitmq
-from app.subscriber import setup_subscription
-
+from app.readiness import Readiness
+from app.subscriber import setup_subscription, OFFLINE_SUBSCRIPTION_NAME, offline_receipt_to_case, \
+    OFFLINE_SUBSCRIPTION_PROJECT_ID
 
 logger = wrap_logger(logging.getLogger(__name__))
 
@@ -21,11 +21,17 @@ def main():
 
     init_rabbitmq()  # test the connection to the rabbitmq cluster
 
-    subscriber_future = setup_subscription()
-    with Readiness(os.getenv('READINESS_FILE_PATH', os.path.join(os.getcwd(), 'pubsub-ready'))):  # Indicate ready after successful setup
-        while True:  # setup_subscription creates a background thread for processing messages
-            subscriber_future.result(timeout=None)  # block main thread while polling for messages indefinitely
-            time.sleep(30)
+    futures = [setup_subscription(),
+               setup_subscription(subscription_name=OFFLINE_SUBSCRIPTION_NAME, callback=offline_receipt_to_case,
+                                  subscription_project_id=OFFLINE_SUBSCRIPTION_PROJECT_ID)]
+    with Readiness(os.getenv('READINESS_FILE_PATH',
+                             os.path.join(os.getcwd(), 'pubsub-ready'))):  # Indicate ready after successful setup
+
+        while True:
+            sleep(10)
+            for future in futures:
+                if not future.running():
+                    raise future.exception(timeout=0) or RuntimeError('Thread exited unexpectedly')
 
 
 if __name__ == '__main__':
