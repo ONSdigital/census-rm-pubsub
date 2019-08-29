@@ -175,6 +175,7 @@ class CensusRMPubSubComponentTest(TestCase):
                       binding_key=RABBIT_ROUTE,
                       exchange_name=RABBIT_EXCHANGE,
                       queue_name=RABBIT_TEST_QUEUE):
+        # NB: instead of pre-loading a definitions.json file we have programmatically declared what we need for the test
         rabbitmq_connection = pika.BlockingConnection(pika.URLParameters(rabbitmq_amqp))
         channel = rabbitmq_connection.channel()
         channel.exchange_declare(exchange=exchange_name, exchange_type='topic', durable=True)
