@@ -25,6 +25,7 @@ class CensusRMPubSubComponentTest(TestCase):
         self.purge_rabbit_queues()
 
     def test_e2e_with_sucessful_msg(self):
+        self.purge_rabbit_queues()
         expected_case_id = str(uuid.uuid4())
         expected_tx_id = str(uuid.uuid4())
         expected_q_id = str(uuid.uuid4())
@@ -54,6 +55,7 @@ class CensusRMPubSubComponentTest(TestCase):
         assert expected_msg == case_msg, "RabbitMQ message text incorrect"
 
     def test_offline_e2e_with_sucessful_msg(self):
+        self.purge_rabbit_queues()
         expected_tx_id = str(uuid.uuid4())
         expected_q_id = str(uuid.uuid4())
         self.publish_offline_to_pubsub(expected_tx_id, expected_q_id)
@@ -81,6 +83,7 @@ class CensusRMPubSubComponentTest(TestCase):
         assert expected_msg == case_msg, "RabbitMQ message text incorrect"
 
     def test_e2e_with_no_case_id(self):
+        self.purge_rabbit_queues()
         expected_tx_id = str(uuid.uuid4())
         expected_q_id = str(uuid.uuid4())
         self.publish_to_pubsub(expected_tx_id, expected_q_id)
