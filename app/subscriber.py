@@ -48,20 +48,14 @@ def receipt_to_case(message: Message):
     log = log.bind(bucket_name=bucket_name, object_name=object_name)
     log.info('Pub/Sub Message received for processing')
 
-    try:
-        payload = json.loads(message.data)  # parse metadata as JSON payload
-        metadata = payload['metadata']
-        tx_id, questionnaire_id, case_id = metadata['tx_id'], metadata['questionnaire_id'], metadata.get('case_id')
-        time_obj_created = parse_datetime(payload['timeCreated']).isoformat()
-    except (TypeError, json.JSONDecodeError):
-        log.error('Pub/Sub Message data not JSON')
-        return
-    except KeyError as e:
-        log.error('Pub/Sub Message missing required data', missing_json_key=e.args[0])
-        return
-    except ValueError:
-        log.error('Pub/Sub Message has invalid RFC 3339 timeCreated datetime string')
-        return
+    payload = validate_message(message.data, log, ['metadata', 'tx_id', 'questionnaire_id', 'case_id'],
+                               date_time_key='timeCreated')
+    if not payload:
+        return  # Failed validation
+
+    metadata = payload['metadata']
+    tx_id, questionnaire_id, case_id = metadata['tx_id'], metadata['questionnaire_id'], metadata.get('case_id')
+    time_obj_created = parse_datetime(payload['timeCreated']).isoformat()
 
     log = log.bind(questionnaire_id=questionnaire_id, created=time_obj_created, tx_id=tx_id, case_id=case_id)
 
@@ -95,19 +89,12 @@ def offline_receipt_to_case(message: Message):
 
     log.info('Pub/Sub Message received for processing')
 
-    try:
-        payload = json.loads(message.data)  # parse metadata as JSON payload
-        tx_id, questionnaire_id, channel = payload['transactionId'], payload['questionnaireId'], payload['channel']
-        time_obj_created = parse_datetime(payload['dateTime']).isoformat()
-    except (TypeError, json.JSONDecodeError):
-        log.error('Pub/Sub Message data not JSON')
-        return
-    except KeyError as e:
-        log.error('Pub/Sub Message missing required data', missing_json_key=e.args[0])
-        return
-    except ValueError:
-        log.error('Pub/Sub Message has invalid RFC 3339 timeCreated datetime string')
-        return
+    payload = validate_message(message.data, log, ['transactionId', 'questionnaireId', 'channel'])
+    if not payload:
+        return  # Failed validation
+
+    tx_id, questionnaire_id, channel = payload['transactionId'], payload['questionnaireId'], payload['channel']
+    time_obj_created = parse_datetime(payload['dateTime']).isoformat()
 
     log = log.bind(questionnaire_id=questionnaire_id, created=time_obj_created, tx_id=tx_id, channel=channel)
 
@@ -140,28 +127,20 @@ def ppo_undelivered_mail_to_case(message: Message):
 
     log.debug('Pub/Sub Message received for processing')
 
-    try:
-        payload = json.loads(message.data)  # parse metadata as JSON payload
-        case_ref, product_code, unmangled_datetime = payload['caseRef'], payload['productCode'], payload['dateTime']
-        time_obj_created = parse_datetime(unmangled_datetime).isoformat()
-    except (TypeError, json.JSONDecodeError):
-        log.error('Pub/Sub Message data not JSON')
-        return
-    except KeyError as e:
-        log.error('Pub/Sub Message missing required data', missing_json_key=e.args[0])
-        return
-    except ValueError:
-        log.error('Pub/Sub Message has invalid RFC 3339 timeCreated datetime string')
-        return
+    payload = validate_message(message.data, log, ['caseRef', 'productCode'])
+    if not payload:
+        return  # Failed validation
 
-    log = log.bind(case_ref=case_ref, created=time_obj_created, product_code=product_code)
+    case_ref, product_code, date_time = payload['caseRef'], payload['productCode'], payload['dateTime']
+
+    log = log.bind(case_ref=case_ref, created=date_time, product_code=product_code)
 
     receipt_message = {
         'event': {
             'type': 'UNDELIVERED_MAIL_REPORTED',
             'source': 'RECEIPT_SERVICE',
             'channel': 'PPO',
-            'dateTime': unmangled_datetime,
+            'dateTime': date_time,
             'transactionId': str(uuid.uuid4())
         },
         'payload': {
@@ -185,28 +164,20 @@ def qm_undelivered_mail_to_case(message: Message):
 
     log.debug('Pub/Sub Message received for processing')
 
-    try:
-        payload = json.loads(message.data)  # parse metadata as JSON payload
-        questionnaire_id, unmangled_date = payload['questionnaireId'], payload['dateTime']
-        time_obj_created = parse_datetime(unmangled_date).isoformat()
-    except (TypeError, json.JSONDecodeError):
-        log.error('Pub/Sub Message data not JSON')
-        return
-    except KeyError as e:
-        log.error('Pub/Sub Message missing required data', missing_json_key=e.args[0])
-        return
-    except ValueError:
-        log.error('Pub/Sub Message has invalid RFC 3339 timeCreated datetime string')
-        return
+    payload = validate_message(message.data, log, ['questionnaireId'])
+    if not payload:
+        return  # Failed validation
 
-    log = log.bind(questionnaire_id=questionnaire_id, created=time_obj_created)
+    questionnaire_id, date_time = payload['questionnaireId'], payload['dateTime']
+
+    log = log.bind(questionnaire_id=questionnaire_id, created=date_time)
 
     receipt_message = {
         'event': {
             'type': 'UNDELIVERED_MAIL_REPORTED',
             'source': 'RECEIPT_SERVICE',
             'channel': 'QM',
-            'dateTime': unmangled_date,
+            'dateTime': date_time,
             'transactionId': str(uuid.uuid4())
         },
         'payload': {
@@ -220,6 +191,26 @@ def qm_undelivered_mail_to_case(message: Message):
     message.ack()
 
     log.debug('Message processing complete')
+
+
+def validate_message(message_data, log, expected_keys, date_time_key='dateTime'):
+    try:
+        payload = json.loads(message_data)  # parse metadata as JSON payload
+        for expected_key in expected_keys:
+            if expected_key not in payload:
+                log.error('Pub/Sub Message missing required data', missing_json_key=expected_key)
+
+        parse_datetime(payload[date_time_key]).isoformat()
+        return payload
+    except (TypeError, json.JSONDecodeError):
+        log.error('Pub/Sub Message data not JSON')
+        return None
+    except KeyError as e:
+        log.error('Pub/Sub Message missing required data', missing_json_key=e.args[0])
+        return None
+    except ValueError:
+        log.error('Pub/Sub Message has invalid RFC 3339 timeCreated datetime string')
+        return None
 
 
 def setup_subscription(subscription_name=SUBSCRIPTION_NAME,
