@@ -200,6 +200,37 @@ class TestSubscriber(TestCase):
         mock_message.ack.assert_called_once()
 
     @patch('app.subscriber.send_message_to_rabbitmq')
+    def test_ppo_undelivered_mail_to_case(self, mock_send_message_to_rabbit_mq):
+        mock_message = MagicMock()
+        mock_message.data = json.dumps(
+            {"dateTime": "2019-08-03T14:30:01Z",
+             "caseRef": "123",
+             "productCode": "XYZ",
+             "channel": "PPO",
+             "type": "UNDELIVERED_MAIL_REPORTED"})
+        mock_message.message_id = str(uuid.uuid4())
+
+        from app.subscriber import ppo_undelivered_mail_to_case
+        ppo_undelivered_mail_to_case(mock_message)
+
+        mock_send_message_to_rabbit_mq.assert_called_once()
+        mock_message.ack.assert_called_once()
+
+    @patch('app.subscriber.send_message_to_rabbitmq')
+    def test_qm_undelivered_mail_to_case(self, mock_send_message_to_rabbit_mq):
+        mock_message = MagicMock()
+        mock_message.data = json.dumps(
+            {"dateTime": "2019-08-03T14:30:01Z",
+             "questionnaireId": "123"})
+        mock_message.message_id = str(uuid.uuid4())
+
+        from app.subscriber import qm_undelivered_mail_to_case
+        qm_undelivered_mail_to_case(mock_message)
+
+        mock_send_message_to_rabbit_mq.assert_called_once()
+        mock_message.ack.assert_called_once()
+
+    @patch('app.subscriber.send_message_to_rabbitmq')
     def test_receipt_to_case_missing_eventType(self, mock_send_message_to_rabbit_mq):
         mock_message = MagicMock()
         mock_message.message_id = str(uuid.uuid4())
