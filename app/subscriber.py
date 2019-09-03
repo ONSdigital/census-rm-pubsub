@@ -14,8 +14,8 @@ from app.rabbit_helper import send_message_to_rabbitmq
 
 SUBSCRIPTION_NAME = os.getenv("SUBSCRIPTION_NAME", "rm-receipt-subscription")
 OFFLINE_SUBSCRIPTION_NAME = os.getenv("OFFLINE_SUBSCRIPTION_NAME", "rm-offline-receipt-subscription")
-PPO_UNDELIVERED_SUBSCRIPTION_NAME = os.getenv("PPO_UNDELIVERED_SUBSCRIPTION_NAME", "rm-ppo-undelivered-mail-subscription")
-QM_UNDELIVERED_SUBSCRIPTION_NAME = os.getenv("QM_UNDELIVERED_SUBSCRIPTION_NAME", "rm-qm-undelivered-mail-subscription")
+PPO_UNDELIVERED_SUBSCRIPTION_NAME = os.getenv("PPO_UNDELIVERED_SUBSCRIPTION_NAME", "rm-ppo-undelivered-subscription")
+QM_UNDELIVERED_SUBSCRIPTION_NAME = os.getenv("QM_UNDELIVERED_SUBSCRIPTION_NAME", "rm-qm-undelivered-subscription")
 SUBSCRIPTION_PROJECT_ID = os.getenv("SUBSCRIPTION_PROJECT_ID")
 OFFLINE_SUBSCRIPTION_PROJECT_ID = os.getenv("OFFLINE_SUBSCRIPTION_PROJECT_ID")
 PPO_UNDELIVERED_SUBSCRIPTION_PROJECT_ID = os.getenv("PPO_UNDELIVERED_SUBSCRIPTION_PROJECT_ID")
