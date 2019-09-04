@@ -24,7 +24,7 @@ class CensusRMPubSubComponentTest(TestCase):
         os.environ["PUBSUB_EMULATOR_HOST"] = "localhost:8539"
         self.purge_rabbit_queues()
 
-    def test_ppo_undelivered_e2e_with_sucessful_msg(self):
+    def test_ppo_undelivered_e2e_with_successful_msg(self):
         self.purge_rabbit_queues()
         expected_case_ref = 1234
         expected_product_code = 'P_OR_H1'
@@ -42,7 +42,7 @@ class CensusRMPubSubComponentTest(TestCase):
         assert actual_result['payload']['fulfilmentInformation']['caseRef'] == expected_case_ref
         assert actual_result['payload']['fulfilmentInformation']['productCode'] == expected_product_code
 
-    def test_qm_undelivered_e2e_with_sucessful_msg(self):
+    def test_qm_undelivered_e2e_with_successful_msg(self):
         self.purge_rabbit_queues()
         expected_q_id = str(uuid.uuid4())
         self.publish_qm_undelivered_to_pubsub(expected_q_id)
