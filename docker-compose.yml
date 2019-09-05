@@ -44,3 +44,5 @@ services:
     - SUBSCRIPTION_NAME=rm-receipt-subscription
     - OFFLINE_RECEIPT_TOPIC_NAME=offline-receipt-topic
     - OFFLINE_SUBSCRIPTION_NAME=rm-offline-receipt-subscription
+    - PPO_UNDELIVERED_SUBSCRIPTION_PROJECT_ID=ppo-undelivered-project
+    - QM_UNDELIVERED_SUBSCRIPTION_PROJECT_ID=qm-undelivered-project

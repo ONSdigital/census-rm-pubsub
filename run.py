@@ -8,7 +8,9 @@ from app.app_logging import logger_initial_config
 from app.rabbit_helper import init_rabbitmq
 from app.readiness import Readiness
 from app.subscriber import setup_subscription, OFFLINE_SUBSCRIPTION_NAME, offline_receipt_to_case, \
-    OFFLINE_SUBSCRIPTION_PROJECT_ID
+    OFFLINE_SUBSCRIPTION_PROJECT_ID, PPO_UNDELIVERED_SUBSCRIPTION_NAME, PPO_UNDELIVERED_SUBSCRIPTION_PROJECT_ID, \
+    ppo_undelivered_mail_to_case, QM_UNDELIVERED_SUBSCRIPTION_NAME, QM_UNDELIVERED_SUBSCRIPTION_PROJECT_ID, \
+    qm_undelivered_mail_to_case
 
 logger = wrap_logger(logging.getLogger(__name__))
 
@@ -23,7 +25,13 @@ def main():
 
     futures = [setup_subscription(),
                setup_subscription(subscription_name=OFFLINE_SUBSCRIPTION_NAME, callback=offline_receipt_to_case,
-                                  subscription_project_id=OFFLINE_SUBSCRIPTION_PROJECT_ID)]
+                                  subscription_project_id=OFFLINE_SUBSCRIPTION_PROJECT_ID),
+               setup_subscription(subscription_name=PPO_UNDELIVERED_SUBSCRIPTION_NAME,
+                                  callback=ppo_undelivered_mail_to_case,
+                                  subscription_project_id=PPO_UNDELIVERED_SUBSCRIPTION_PROJECT_ID),
+               setup_subscription(subscription_name=QM_UNDELIVERED_SUBSCRIPTION_NAME,
+                                  callback=qm_undelivered_mail_to_case,
+                                  subscription_project_id=QM_UNDELIVERED_SUBSCRIPTION_PROJECT_ID)]
     with Readiness(os.getenv('READINESS_FILE_PATH',
                              os.path.join(os.getcwd(), 'pubsub-ready'))):  # Indicate ready after successful setup
 
