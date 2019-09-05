@@ -39,6 +39,7 @@ class CensusRMPubSubComponentTest(TestCase):
         assert actual_result['event']['source'] == 'RECEIPT_SERVICE'
         assert actual_result['event']['channel'] == 'PPO'
         assert actual_result['event']['dateTime'] == '2019-08-03T14:30:01Z'
+        assert actual_result['event']['transactionId'] == '1'
         assert actual_result['payload']['fulfilmentInformation']['caseRef'] == expected_case_ref
         assert actual_result['payload']['fulfilmentInformation']['productCode'] == expected_product_code
 
@@ -56,6 +57,7 @@ class CensusRMPubSubComponentTest(TestCase):
         assert actual_result['event']['source'] == 'RECEIPT_SERVICE'
         assert actual_result['event']['channel'] == 'QM'
         assert actual_result['event']['dateTime'] == '2019-08-03T14:30:01Z'
+        assert actual_result['event']['transactionId'] == '1'
         assert actual_result['payload']['fulfilmentInformation']['questionnaireId'] == expected_q_id
 
     def purge_rabbit_queues(self):
@@ -71,7 +73,8 @@ class CensusRMPubSubComponentTest(TestCase):
 
         topic_path = publisher.topic_path(PPO_UNDELIVERED_TOPIC_PROJECT_ID, PPO_UNDELIVERED_TOPIC_NAME)
 
-        datadict = {"dateTime": "2019-08-03T14:30:01Z",
+        datadict = {"transactionId": "1",
+                    "dateTime": "2019-08-03T14:30:01Z",
                     "caseRef": case_ref,
                     "productCode": product_code,
                     "channel": "PPO",
@@ -95,7 +98,8 @@ class CensusRMPubSubComponentTest(TestCase):
 
         topic_path = publisher.topic_path(QM_UNDELIVERED_TOPIC_PROJECT_ID, QM_UNDELIVERED_TOPIC_NAME)
 
-        datadict = {"dateTime": "2019-08-03T14:30:01Z",
+        datadict = {"transactionId": "1",
+                    "dateTime": "2019-08-03T14:30:01Z",
                     "questionnaireId": q_id}
 
         data = json.dumps(datadict)

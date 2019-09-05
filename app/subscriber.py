@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import uuid
 
 from google.cloud.pubsub_v1 import SubscriberClient
 from google.cloud.pubsub_v1.subscriber.message import Message
@@ -127,13 +126,13 @@ def ppo_undelivered_mail_to_case(message: Message):
 
     log.debug('Pub/Sub Message received for processing')
 
-    payload = validate_message(message.data, log, ['caseRef', 'productCode'])
+    payload = validate_message(message.data, log, ['transactionId', 'caseRef', 'productCode'])
     if not payload:
         return  # Failed validation
 
-    case_ref, product_code, date_time = payload['caseRef'], payload['productCode'], payload['dateTime']
+    tx_id, case_ref, product_code, date_time = payload['transactionId'], payload['caseRef'], payload['productCode'], payload['dateTime']
 
-    log = log.bind(case_ref=case_ref, created=date_time, product_code=product_code)
+    log = log.bind(case_ref=case_ref, created=date_time, product_code=product_code, tx_id=tx_id)
 
     receipt_message = {
         'event': {
@@ -141,7 +140,7 @@ def ppo_undelivered_mail_to_case(message: Message):
             'source': 'RECEIPT_SERVICE',
             'channel': 'PPO',
             'dateTime': date_time,
-            'transactionId': str(uuid.uuid4())
+            'transactionId': tx_id
         },
         'payload': {
             'fulfilmentInformation': {
@@ -164,13 +163,13 @@ def qm_undelivered_mail_to_case(message: Message):
 
     log.debug('Pub/Sub Message received for processing')
 
-    payload = validate_message(message.data, log, ['questionnaireId'])
+    payload = validate_message(message.data, log, ['transactionId', 'questionnaireId'])
     if not payload:
         return  # Failed validation
 
-    questionnaire_id, date_time = payload['questionnaireId'], payload['dateTime']
+    tx_id, questionnaire_id, date_time = payload['transactionId'], payload['questionnaireId'], payload['dateTime']
 
-    log = log.bind(questionnaire_id=questionnaire_id, created=date_time)
+    log = log.bind(questionnaire_id=questionnaire_id, created=date_time, tx_id=tx_id)
 
     receipt_message = {
         'event': {
@@ -178,7 +177,7 @@ def qm_undelivered_mail_to_case(message: Message):
             'source': 'RECEIPT_SERVICE',
             'channel': 'QM',
             'dateTime': date_time,
-            'transactionId': str(uuid.uuid4())
+            'transactionId': tx_id
         },
         'payload': {
             'fulfilmentInformation': {

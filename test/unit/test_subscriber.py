@@ -214,7 +214,8 @@ class TestSubscriber(TestCase):
     def test_ppo_undelivered_mail_to_case(self, mock_send_message_to_rabbit_mq):
         mock_message = MagicMock()
         mock_message.data = json.dumps(
-            {"dateTime": self.created,
+            {"transactionId": "1",
+             "dateTime": self.created,
              "caseRef": self.case_ref,
              "productCode": self.product_code,
              "channel": "PPO",
@@ -231,7 +232,8 @@ class TestSubscriber(TestCase):
             'product_code': self.product_code,
             'subscription_name': self.ppo_undelivered_subscription_name,
             'subscription_project': self.ppo_undelivered_subscription_project_id,
-            'message_id': mock_message.message_id
+            'message_id': mock_message.message_id,
+            'tx_id': '1'
         }
 
         expected_rabbit_message = json.dumps(
@@ -240,7 +242,7 @@ class TestSubscriber(TestCase):
                 'source': 'RECEIPT_SERVICE',
                 'channel': 'PPO',
                 'dateTime': '2008-08-24T00:00:00Z',
-                'transactionId': '12345'
+                'transactionId': '1'
             },
                 'payload': {
                     'fulfilmentInformation': {
@@ -250,10 +252,8 @@ class TestSubscriber(TestCase):
                 }
             })
         from app.subscriber import ppo_undelivered_mail_to_case
-        with patch('uuid.uuid4') as mock_uuid:
-            with self.checkExpectedLogLine('DEBUG', expected_log_event, expected_log_kwargs):
-                mock_uuid.return_value = '12345'
-                ppo_undelivered_mail_to_case(mock_message)
+        with self.checkExpectedLogLine('DEBUG', expected_log_event, expected_log_kwargs):
+            ppo_undelivered_mail_to_case(mock_message)
 
         mock_send_message_to_rabbit_mq.assert_called_once_with(expected_rabbit_message,
                                                                routing_key='event.fulfilment.undelivered')
@@ -263,7 +263,8 @@ class TestSubscriber(TestCase):
     def test_qm_undelivered_mail_to_case(self, mock_send_message_to_rabbit_mq):
         mock_message = MagicMock()
         mock_message.data = json.dumps(
-            {"dateTime": self.created,
+            {"transactionId": "1",
+             "dateTime": self.created,
              "questionnaireId": self.questionnaire_id})
         mock_message.message_id = str(uuid.uuid4())
 
@@ -275,7 +276,8 @@ class TestSubscriber(TestCase):
             'created': self.created,
             'subscription_name': self.qm_undelivered_subscription_name,
             'subscription_project': self.qm_undelivered_subscription_project_id,
-            'message_id': mock_message.message_id
+            'message_id': mock_message.message_id,
+            'tx_id': '1'
         }
 
         expected_rabbit_message = json.dumps({
@@ -284,7 +286,7 @@ class TestSubscriber(TestCase):
                 'source': 'RECEIPT_SERVICE',
                 'channel': 'QM',
                 'dateTime': '2008-08-24T00:00:00Z',
-                'transactionId': '12345'
+                'transactionId': '1'
             },
             'payload': {
                 'fulfilmentInformation': {
