@@ -1,15 +1,14 @@
 import json
 import logging
 import os
+from datetime import datetime, timezone
 
 from google.cloud.pubsub_v1 import SubscriberClient
 from google.cloud.pubsub_v1.subscriber.message import Message
 from rfc3339 import parse_datetime
-
 from structlog import wrap_logger
 
 from app.rabbit_helper import send_message_to_rabbitmq
-
 
 SUBSCRIPTION_NAME = os.getenv("SUBSCRIPTION_NAME", "rm-receipt-subscription")
 OFFLINE_SUBSCRIPTION_NAME = os.getenv("OFFLINE_SUBSCRIPTION_NAME", "rm-offline-receipt-subscription")
@@ -93,7 +92,7 @@ def offline_receipt_to_case(message: Message):
         return  # Failed validation
 
     tx_id, questionnaire_id, channel = payload['transactionId'], payload['questionnaireId'], payload['channel']
-    time_obj_created = parse_datetime(payload['dateTime']).isoformat()
+    time_obj_created = datetime.strptime(payload['dateTime'], '%Y-%m-%dT%H:%M:%S').replace(tzinfo=timezone.utc).isoformat()
 
     log = log.bind(questionnaire_id=questionnaire_id, created=time_obj_created, tx_id=tx_id, channel=channel)
 
@@ -130,7 +129,8 @@ def ppo_undelivered_mail_to_case(message: Message):
     if not payload:
         return  # Failed validation
 
-    tx_id, case_ref, product_code, date_time = payload['transactionId'], payload['caseRef'], payload['productCode'], payload['dateTime']
+    tx_id, case_ref, product_code = payload['transactionId'], payload['caseRef'], payload['productCode']
+    date_time = datetime.strptime(payload['dateTime'], '%Y-%m-%dT%H:%M:%S').replace(tzinfo=timezone.utc).isoformat()
 
     log = log.bind(case_ref=case_ref, created=date_time, product_code=product_code, tx_id=tx_id)
 
@@ -167,7 +167,8 @@ def qm_undelivered_mail_to_case(message: Message):
     if not payload:
         return  # Failed validation
 
-    tx_id, questionnaire_id, date_time = payload['transactionId'], payload['questionnaireId'], payload['dateTime']
+    tx_id, questionnaire_id = payload['transactionId'], payload['questionnaireId']
+    date_time = datetime.strptime(payload['dateTime'], '%Y-%m-%dT%H:%M:%S').replace(tzinfo=timezone.utc).isoformat()
 
     log = log.bind(questionnaire_id=questionnaire_id, created=date_time, tx_id=tx_id)
 
@@ -199,7 +200,11 @@ def validate_message(message_data, log, expected_keys, date_time_key='dateTime')
             if expected_key not in payload:
                 log.error('Pub/Sub Message missing required data', missing_json_key=expected_key)
 
-        parse_datetime(payload[date_time_key]).isoformat()
+        try:
+            parse_datetime(payload[date_time_key]).isoformat()
+        except ValueError:
+            datetime.strptime(payload[date_time_key], '%Y-%m-%dT%H:%M:%S').replace(tzinfo=timezone.utc).isoformat()
+
         return payload
     except (TypeError, json.JSONDecodeError):
         log.error('Pub/Sub Message data not JSON')
@@ -208,7 +213,7 @@ def validate_message(message_data, log, expected_keys, date_time_key='dateTime')
         log.error('Pub/Sub Message missing required data', missing_json_key=e.args[0])
         return None
     except ValueError:
-        log.error('Pub/Sub Message has invalid RFC 3339 timeCreated datetime string')
+        log.error('Pub/Sub Message has invalid datetime string')
         return None
 
 

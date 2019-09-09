@@ -23,6 +23,8 @@ class TestSubscriber(TestCase):
     questionnaire_id = '0120000000001000'
     created = '2008-08-24T00:00:00Z'
     parsed_created = '2008-08-24T00:00:00+00:00'
+    created_offline_spec = '2008-08-24T00:00:00'
+    parsed_created_offline_spec = '2008-08-24T00:00:00+00:00'
     gcp_bucket = 'test-bucket'
     gcp_object_id = 'test-object'
     subscriber_future = 'test-future'
@@ -125,8 +127,6 @@ class TestSubscriber(TestCase):
              "timeCreated": self.created})
         mock_message.message_id = str(uuid.uuid4())
 
-        create_stub_function(self.created, return_value=self.parsed_created)
-
         expected_log_event = 'Message processing complete'
         expected_log_kwargs = {
             'bucket_name': self.gcp_bucket,
@@ -169,16 +169,14 @@ class TestSubscriber(TestCase):
     def test_offline_receipt_to_case(self, mock_send_message_to_rabbit_mq):
         mock_message = MagicMock()
         mock_message.data = json.dumps(
-            {"transactionId": "1", "questionnaireId": self.questionnaire_id, "dateTime": self.created,
+            {"transactionId": "1", "questionnaireId": self.questionnaire_id, "dateTime": self.created_offline_spec,
              "channel": "PQRS"})
         mock_message.message_id = str(uuid.uuid4())
-
-        create_stub_function(self.created, return_value=self.parsed_created)
 
         expected_log_event = 'Message processing complete'
         expected_log_kwargs = {
             'questionnaire_id': self.questionnaire_id,
-            'created': self.parsed_created,
+            'created': self.parsed_created_offline_spec,
             'tx_id': '1',
             'channel': 'PQRS',
             'subscription_name': self.offline_subscription_name,
@@ -215,7 +213,7 @@ class TestSubscriber(TestCase):
         mock_message = MagicMock()
         mock_message.data = json.dumps(
             {"transactionId": "1",
-             "dateTime": self.created,
+             "dateTime": self.created_offline_spec,
              "caseRef": self.case_ref,
              "productCode": self.product_code,
              "channel": "PPO",
@@ -223,12 +221,10 @@ class TestSubscriber(TestCase):
 
         mock_message.message_id = str(uuid.uuid4())
 
-        create_stub_function(self.created, return_value=self.parsed_created)
-
         expected_log_event = 'Message processing complete'
         expected_log_kwargs = {
             'case_ref': self.case_ref,
-            'created': self.created,
+            'created': self.parsed_created_offline_spec,
             'product_code': self.product_code,
             'subscription_name': self.ppo_undelivered_subscription_name,
             'subscription_project': self.ppo_undelivered_subscription_project_id,
@@ -241,7 +237,7 @@ class TestSubscriber(TestCase):
                 'type': 'UNDELIVERED_MAIL_REPORTED',
                 'source': 'RECEIPT_SERVICE',
                 'channel': 'PPO',
-                'dateTime': '2008-08-24T00:00:00Z',
+                'dateTime': '2008-08-24T00:00:00+00:00',
                 'transactionId': '1'
             },
                 'payload': {
@@ -264,16 +260,16 @@ class TestSubscriber(TestCase):
         mock_message = MagicMock()
         mock_message.data = json.dumps(
             {"transactionId": "1",
-             "dateTime": self.created,
+             "dateTime": self.created_offline_spec,
              "questionnaireId": self.questionnaire_id})
         mock_message.message_id = str(uuid.uuid4())
 
-        create_stub_function(self.created, return_value=self.parsed_created)
+        create_stub_function(self.created, return_value=self.parsed_created_offline_spec)
 
         expected_log_event = 'Message processing complete'
         expected_log_kwargs = {
             'questionnaire_id': self.questionnaire_id,
-            'created': self.created,
+            'created': self.parsed_created_offline_spec,
             'subscription_name': self.qm_undelivered_subscription_name,
             'subscription_project': self.qm_undelivered_subscription_project_id,
             'message_id': mock_message.message_id,
@@ -285,7 +281,7 @@ class TestSubscriber(TestCase):
                 'type': 'UNDELIVERED_MAIL_REPORTED',
                 'source': 'RECEIPT_SERVICE',
                 'channel': 'QM',
-                'dateTime': '2008-08-24T00:00:00Z',
+                'dateTime': '2008-08-24T00:00:00+00:00',
                 'transactionId': '1'
             },
             'payload': {
@@ -542,7 +538,7 @@ class TestSubscriber(TestCase):
         mock_message.data = json.dumps(
             {"metadata": {"tx_id": "1", "questionnaire_id": "0120000000001000"}, "timeCreated": "123"})
 
-        expected_log_event = 'Pub/Sub Message has invalid RFC 3339 timeCreated datetime string'
+        expected_log_event = 'Pub/Sub Message has invalid datetime string'
         expected_log_kwargs = {
             'bucket_name': self.gcp_bucket,
             'object_name': self.gcp_object_id,

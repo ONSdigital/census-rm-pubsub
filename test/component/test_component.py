@@ -156,7 +156,7 @@ class CensusRMPubSubComponentTest(TestCase):
 
         topic_path = publisher.topic_path(OFFLINE_RECEIPT_TOPIC_PROJECT_ID, OFFLINE_RECEIPT_TOPIC_NAME)
 
-        datadict = {"dateTime": "2008-08-24T00:00:00Z", "productCode": "H1", "channel": "PQRS",
+        datadict = {"dateTime": "2008-08-24T00:00:00", "productCode": "H1", "channel": "PQRS",
                     "questionnaireId": questionnaire_id,
                     "source": "RECEIPT-SERVICE", "type": "FULFILMENT_CONFIRMED",
                     "transactionId": tx_id}
