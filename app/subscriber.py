@@ -87,7 +87,7 @@ def offline_receipt_to_case(message: Message):
 
     log.info('Pub/Sub Message received for processing')
 
-    payload = validate_message(message.data, log, ['transactionId', 'questionnaireId', 'channel'])
+    payload = validate_message(message.data, log, ['transactionId', 'questionnaireId', 'channel'], expect_iso_format_datetime=False)
     if not payload:
         return  # Failed validation
 
@@ -125,7 +125,7 @@ def ppo_undelivered_mail_to_case(message: Message):
 
     log.debug('Pub/Sub Message received for processing')
 
-    payload = validate_message(message.data, log, ['transactionId', 'caseRef', 'productCode'])
+    payload = validate_message(message.data, log, ['transactionId', 'caseRef', 'productCode'], expect_iso_format_datetime=False)
     if not payload:
         return  # Failed validation
 
@@ -163,7 +163,7 @@ def qm_undelivered_mail_to_case(message: Message):
 
     log.debug('Pub/Sub Message received for processing')
 
-    payload = validate_message(message.data, log, ['transactionId', 'questionnaireId'])
+    payload = validate_message(message.data, log, ['transactionId', 'questionnaireId'], expect_iso_format_datetime=False)
     if not payload:
         return  # Failed validation
 
@@ -193,16 +193,16 @@ def qm_undelivered_mail_to_case(message: Message):
     log.debug('Message processing complete')
 
 
-def validate_message(message_data, log, expected_keys, date_time_key='dateTime'):
+def validate_message(message_data, log, expected_keys, date_time_key='dateTime', expect_iso_format_datetime=True):
     try:
         payload = json.loads(message_data)  # parse metadata as JSON payload
         for expected_key in expected_keys:
             if expected_key not in payload:
                 log.error('Pub/Sub Message missing required data', missing_json_key=expected_key)
 
-        try:
+        if expect_iso_format_datetime:
             parse_datetime(payload[date_time_key]).isoformat()
-        except ValueError:
+        else:
             datetime.strptime(payload[date_time_key], '%Y-%m-%dT%H:%M:%S').replace(tzinfo=timezone.utc).isoformat()
 
         return payload
