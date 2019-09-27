@@ -24,7 +24,7 @@ logger = wrap_logger(logging.getLogger(__name__))
 client = SubscriberClient()
 
 
-def receipt_to_case(message: Message):
+def eq_receipt_to_case(message: Message):
     """
     Callback for handling new pubsub messages which attempts to publish a receipt to the events exchange
 
@@ -46,8 +46,7 @@ def receipt_to_case(message: Message):
     log = log.bind(bucket_name=bucket_name, object_name=object_name)
     log.info('Pub/Sub Message received for processing')
 
-    payload = validate_message(message.data, log, ['metadata', 'tx_id', 'questionnaire_id', 'case_id'],
-                               date_time_key='timeCreated')
+    payload = validate_eq_receipt(message.data, log, ['timeCreated'], ['tx_id', 'questionnaire_id'])
     if not payload:
         return  # Failed validation
 
@@ -87,7 +86,7 @@ def offline_receipt_to_case(message: Message):
 
     log.info('Pub/Sub Message received for processing')
 
-    payload = validate_message(message.data, log, ['transactionId', 'questionnaireId', 'channel'], expect_iso_format_datetime=False)
+    payload = validate_offline_receipt(message.data, log, ['transactionId', 'questionnaireId', 'channel'])
     if not payload:
         return  # Failed validation
 
@@ -125,7 +124,7 @@ def ppo_undelivered_mail_to_case(message: Message):
 
     log.debug('Pub/Sub Message received for processing')
 
-    payload = validate_message(message.data, log, ['transactionId', 'caseRef', 'productCode'], expect_iso_format_datetime=False)
+    payload = validate_offline_receipt(message.data, log, ['transactionId', 'caseRef', 'productCode'])
     if not payload:
         return  # Failed validation
 
@@ -163,7 +162,7 @@ def qm_undelivered_mail_to_case(message: Message):
 
     log.debug('Pub/Sub Message received for processing')
 
-    payload = validate_message(message.data, log, ['transactionId', 'questionnaireId'], expect_iso_format_datetime=False)
+    payload = validate_offline_receipt(message.data, log, ['transactionId', 'questionnaireId'])
     if not payload:
         return  # Failed validation
 
@@ -193,17 +192,46 @@ def qm_undelivered_mail_to_case(message: Message):
     log.debug('Message processing complete')
 
 
-def validate_message(message_data, log, expected_keys, date_time_key='dateTime', expect_iso_format_datetime=True):
+def validate_offline_receipt(message_data, log, expected_keys, date_time_key='dateTime'):
     try:
         payload = json.loads(message_data)  # parse metadata as JSON payload
         for expected_key in expected_keys:
             if expected_key not in payload:
                 log.error('Pub/Sub Message missing required data', missing_json_key=expected_key)
+                return None
 
-        if expect_iso_format_datetime:
-            parse_datetime(payload[date_time_key]).isoformat()
-        else:
-            datetime.strptime(payload[date_time_key], '%Y-%m-%dT%H:%M:%S').replace(tzinfo=timezone.utc).isoformat()
+        datetime.strptime(payload[date_time_key], '%Y-%m-%dT%H:%M:%S').replace(tzinfo=timezone.utc).isoformat()
+
+        return payload
+    except (TypeError, json.JSONDecodeError):
+        log.error('Pub/Sub Message data not JSON')
+        return None
+    except KeyError as e:
+        log.error('Pub/Sub Message missing required data', missing_json_key=e.args[0])
+        return None
+    except ValueError:
+        log.error('Pub/Sub Message has invalid datetime string')
+        return None
+
+
+def validate_eq_receipt(message_data, log, expected_keys, expected_metadata_keys, date_time_key='timeCreated'):
+    try:
+        payload = json.loads(message_data)  # parse metadata as JSON payload
+        if 'metadata' not in payload:
+            log.error('Pub/Sub Message missing required data', missing_json_key='metadata')
+            return None
+
+        for expected_key in expected_keys:
+            if expected_key not in payload:
+                log.error('Pub/Sub Message missing required data', missing_json_key=expected_key)
+                return None
+
+        for expected_metadata_key in expected_metadata_keys:
+            if expected_metadata_key not in payload['metadata']:
+                log.error('Pub/Sub Message missing required data', missing_json_key=expected_metadata_key)
+                return None
+
+        parse_datetime(payload[date_time_key]).isoformat()
 
         return payload
     except (TypeError, json.JSONDecodeError):
@@ -219,7 +247,7 @@ def validate_message(message_data, log, expected_keys, date_time_key='dateTime',
 
 def setup_subscription(subscription_name=SUBSCRIPTION_NAME,
                        subscription_project_id=SUBSCRIPTION_PROJECT_ID,
-                       callback=receipt_to_case):
+                       callback=eq_receipt_to_case):
     """
     Create a subscriber thread which handles new messages through a callback
 

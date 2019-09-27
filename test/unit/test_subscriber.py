@@ -3,7 +3,7 @@ import os
 import uuid
 from contextlib import contextmanager
 from unittest import TestCase
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from test import create_stub_function
 
@@ -157,10 +157,10 @@ class TestSubscriber(TestCase):
                 }
             })
 
-        from app.subscriber import receipt_to_case
+        from app.subscriber import eq_receipt_to_case
 
         with self.checkExpectedLogLine('INFO', expected_log_event, expected_log_kwargs):
-            receipt_to_case(mock_message)
+            eq_receipt_to_case(mock_message)
 
         mock_send_message_to_rabbit_mq.assert_called_once_with(expected_rabbit_message)
         mock_message.ack.assert_called_once()
@@ -264,8 +264,6 @@ class TestSubscriber(TestCase):
              "questionnaireId": self.questionnaire_id})
         mock_message.message_id = str(uuid.uuid4())
 
-        create_stub_function(self.created, return_value=self.parsed_created_offline_spec)
-
         expected_log_event = 'Message processing complete'
         expected_log_kwargs = {
             'questionnaire_id': self.questionnaire_id,
@@ -316,10 +314,10 @@ class TestSubscriber(TestCase):
             'message_id': mock_message.message_id,
         }
 
-        from app.subscriber import receipt_to_case
+        from app.subscriber import eq_receipt_to_case
 
         with self.checkExpectedLogLine('ERROR', expected_log_event, expected_log_kwargs):
-            receipt_to_case(mock_message)
+            eq_receipt_to_case(mock_message)
 
         mock_send_message_to_rabbit_mq.assert_not_called()
         mock_message.ack.assert_not_called()
@@ -340,10 +338,10 @@ class TestSubscriber(TestCase):
             'message_id': mock_message.message_id,
         }
 
-        from app.subscriber import receipt_to_case
+        from app.subscriber import eq_receipt_to_case
 
         with self.checkExpectedLogLine('ERROR', expected_log_event, expected_log_kwargs):
-            receipt_to_case(mock_message)
+            eq_receipt_to_case(mock_message)
 
         mock_send_message_to_rabbit_mq.assert_not_called()
         mock_message.ack.assert_not_called()
@@ -364,10 +362,10 @@ class TestSubscriber(TestCase):
             'message_id': mock_message.message_id,
         }
 
-        from app.subscriber import receipt_to_case
+        from app.subscriber import eq_receipt_to_case
 
         with self.checkExpectedLogLine('ERROR', expected_log_event, expected_log_kwargs):
-            receipt_to_case(mock_message)
+            eq_receipt_to_case(mock_message)
 
         mock_send_message_to_rabbit_mq.assert_not_called()
         mock_message.ack.assert_not_called()
@@ -386,10 +384,10 @@ class TestSubscriber(TestCase):
             'message_id': mock_message.message_id,
         }
 
-        from app.subscriber import receipt_to_case
+        from app.subscriber import eq_receipt_to_case
 
         with self.checkExpectedLogLine('ERROR', expected_log_event, expected_log_kwargs):
-            receipt_to_case(mock_message)
+            eq_receipt_to_case(mock_message)
 
         mock_send_message_to_rabbit_mq.assert_not_called()
         mock_message.ack.assert_not_called()
@@ -412,10 +410,10 @@ class TestSubscriber(TestCase):
             'message_id': mock_message.message_id,
         }
 
-        from app.subscriber import receipt_to_case
+        from app.subscriber import eq_receipt_to_case
 
         with self.checkExpectedLogLine('ERROR', expected_log_event, expected_log_kwargs):
-            receipt_to_case(mock_message)
+            eq_receipt_to_case(mock_message)
 
         mock_send_message_to_rabbit_mq.assert_not_called()
         mock_message.ack.assert_not_called()
@@ -439,10 +437,10 @@ class TestSubscriber(TestCase):
             'missing_json_key': 'metadata',
         }
 
-        from app.subscriber import receipt_to_case
+        from app.subscriber import eq_receipt_to_case
 
         with self.checkExpectedLogLine('ERROR', expected_log_event, expected_log_kwargs):
-            receipt_to_case(mock_message)
+            eq_receipt_to_case(mock_message)
 
         mock_send_message_to_rabbit_mq.assert_not_called()
         mock_message.ack.assert_not_called()
@@ -454,7 +452,7 @@ class TestSubscriber(TestCase):
         mock_message.attributes = {'eventType': 'OBJECT_FINALIZE',
                                    'bucketId': self.gcp_bucket,
                                    'objectId': self.gcp_object_id}
-        mock_message.data = json.dumps({"metadata": {"tx_id": "1", "timeCreated": ""}})
+        mock_message.data = json.dumps({"metadata": {"tx_id": "1"}, "timeCreated": ""})
 
         expected_log_event = 'Pub/Sub Message missing required data'
         expected_log_kwargs = {
@@ -466,10 +464,10 @@ class TestSubscriber(TestCase):
             'missing_json_key': 'questionnaire_id',
         }
 
-        from app.subscriber import receipt_to_case
+        from app.subscriber import eq_receipt_to_case
 
         with self.checkExpectedLogLine('ERROR', expected_log_event, expected_log_kwargs):
-            receipt_to_case(mock_message)
+            eq_receipt_to_case(mock_message)
 
         mock_send_message_to_rabbit_mq.assert_not_called()
         mock_message.ack.assert_not_called()
@@ -481,7 +479,7 @@ class TestSubscriber(TestCase):
         mock_message.attributes = {'eventType': 'OBJECT_FINALIZE',
                                    'bucketId': self.gcp_bucket,
                                    'objectId': self.gcp_object_id}
-        mock_message.data = json.dumps({"metadata": {"case_id": "1", "timeCreated": ""}})
+        mock_message.data = json.dumps({"metadata": {"case_id": "1"}, "timeCreated": ""})
 
         expected_log_event = 'Pub/Sub Message missing required data'
         expected_log_kwargs = {
@@ -493,10 +491,10 @@ class TestSubscriber(TestCase):
             'missing_json_key': 'tx_id',
         }
 
-        from app.subscriber import receipt_to_case
+        from app.subscriber import eq_receipt_to_case
 
         with self.checkExpectedLogLine('ERROR', expected_log_event, expected_log_kwargs):
-            receipt_to_case(mock_message)
+            eq_receipt_to_case(mock_message)
 
         mock_send_message_to_rabbit_mq.assert_not_called()
         mock_message.ack.assert_not_called()
@@ -520,10 +518,10 @@ class TestSubscriber(TestCase):
             'missing_json_key': 'timeCreated',
         }
 
-        from app.subscriber import receipt_to_case
+        from app.subscriber import eq_receipt_to_case
 
         with self.checkExpectedLogLine('ERROR', expected_log_event, expected_log_kwargs):
-            receipt_to_case(mock_message)
+            eq_receipt_to_case(mock_message)
 
         mock_send_message_to_rabbit_mq.assert_not_called()
         mock_message.ack.assert_not_called()
@@ -547,10 +545,78 @@ class TestSubscriber(TestCase):
             'message_id': mock_message.message_id,
         }
 
-        from app.subscriber import receipt_to_case
+        from app.subscriber import eq_receipt_to_case
 
         with self.checkExpectedLogLine('ERROR', expected_log_event, expected_log_kwargs):
-            receipt_to_case(mock_message)
+            eq_receipt_to_case(mock_message)
+
+        mock_send_message_to_rabbit_mq.assert_not_called()
+        mock_message.ack.assert_not_called()
+
+    @patch('app.subscriber.send_message_to_rabbitmq')
+    def test_offline_receipt_to_case_dateTime_valueerror(self, mock_send_message_to_rabbit_mq):
+        mock_message = MagicMock()
+        mock_message.data = json.dumps(
+            {"transactionId": "1", "questionnaireId": self.questionnaire_id, "dateTime": "I am a garbage dateTime",
+             "channel": "PQRS"})
+        mock_message.message_id = str(uuid.uuid4())
+
+        expected_log_event = 'Pub/Sub Message has invalid datetime string'
+        expected_log_kwargs = {
+            'subscription_name': self.offline_subscription_name,
+            'subscription_project': self.offline_subscription_project_id,
+            'message_id': mock_message.message_id,
+        }
+
+        from app.subscriber import offline_receipt_to_case
+
+        with self.checkExpectedLogLine('ERROR', expected_log_event, expected_log_kwargs):
+            offline_receipt_to_case(mock_message)
+
+        mock_send_message_to_rabbit_mq.assert_not_called()
+        mock_message.ack.assert_not_called()
+
+    @patch('app.subscriber.send_message_to_rabbitmq')
+    def test_offline_receipt_to_case_missing_json_data(self, mock_send_message_to_rabbit_mq):
+        mock_message = MagicMock()
+        mock_message.message_id = str(uuid.uuid4())
+        mock_message.data = None
+
+        expected_log_event = 'Pub/Sub Message data not JSON'
+        expected_log_kwargs = {
+            'subscription_name': self.offline_subscription_name,
+            'subscription_project': self.offline_subscription_project_id,
+            'message_id': mock_message.message_id,
+        }
+
+        from app.subscriber import offline_receipt_to_case
+
+        with self.checkExpectedLogLine('ERROR', expected_log_event, expected_log_kwargs):
+            offline_receipt_to_case(mock_message)
+
+        mock_send_message_to_rabbit_mq.assert_not_called()
+        mock_message.ack.assert_not_called()
+
+    @patch('app.subscriber.send_message_to_rabbitmq')
+    def test_offline_receipt_to_case_dateTime_missing(self, mock_send_message_to_rabbit_mq):
+        mock_message = MagicMock()
+        mock_message.data = json.dumps(
+            {"transactionId": "1", "questionnaireId": self.questionnaire_id, "channel": "PQRS"})
+        mock_message.message_id = str(uuid.uuid4())
+
+        expected_log_event = 'Pub/Sub Message missing required data'
+        expected_log_kwargs = {
+            'subscription_name': self.offline_subscription_name,
+            'subscription_project': self.offline_subscription_project_id,
+            'message_id': mock_message.message_id,
+            'missing_json_key': 'dateTime'
+
+        }
+
+        from app.subscriber import offline_receipt_to_case
+
+        with self.checkExpectedLogLine('ERROR', expected_log_event, expected_log_kwargs):
+            offline_receipt_to_case(mock_message)
 
         mock_send_message_to_rabbit_mq.assert_not_called()
         mock_message.ack.assert_not_called()
