@@ -554,7 +554,7 @@ class TestSubscriber(TestCase):
         mock_message.ack.assert_not_called()
 
     @patch('app.subscriber.send_message_to_rabbitmq')
-    def test_offline_receipt_to_case_timeCreated_valueerror(self, mock_send_message_to_rabbit_mq):
+    def test_offline_receipt_to_case_dateTime_valueerror(self, mock_send_message_to_rabbit_mq):
         mock_message = MagicMock()
         mock_message.data = json.dumps(
             {"transactionId": "1", "questionnaireId": self.questionnaire_id, "dateTime": "I am a garbage dateTime",
@@ -587,6 +587,30 @@ class TestSubscriber(TestCase):
             'subscription_name': self.offline_subscription_name,
             'subscription_project': self.offline_subscription_project_id,
             'message_id': mock_message.message_id,
+        }
+
+        from app.subscriber import offline_receipt_to_case
+
+        with self.checkExpectedLogLine('ERROR', expected_log_event, expected_log_kwargs):
+            offline_receipt_to_case(mock_message)
+
+        mock_send_message_to_rabbit_mq.assert_not_called()
+        mock_message.ack.assert_not_called()
+
+    @patch('app.subscriber.send_message_to_rabbitmq')
+    def test_offline_receipt_to_case_dateTime_missing(self, mock_send_message_to_rabbit_mq):
+        mock_message = MagicMock()
+        mock_message.data = json.dumps(
+            {"transactionId": "1", "questionnaireId": self.questionnaire_id, "channel": "PQRS"})
+        mock_message.message_id = str(uuid.uuid4())
+
+        expected_log_event = 'Pub/Sub Message missing required data'
+        expected_log_kwargs = {
+            'subscription_name': self.offline_subscription_name,
+            'subscription_project': self.offline_subscription_project_id,
+            'message_id': mock_message.message_id,
+            'missing_json_key': 'dateTime'
+
         }
 
         from app.subscriber import offline_receipt_to_case
