@@ -2,6 +2,7 @@ import logging
 import os
 
 import pika
+from pika.spec import PERSISTENT_DELIVERY_MODE
 from structlog import wrap_logger
 
 RABBIT_EXCHANGE = os.getenv("RABBIT_EXCHANGE", "events")
@@ -39,12 +40,15 @@ def send_message_to_rabbitmq(message,
     :return: boolean
     :raises: PublishMessageError
     """
+    properties = pika.BasicProperties(content_type='application/json', delivery_mode=PERSISTENT_DELIVERY_MODE)
+
     rabbitmq_connection = _create_connection()
     rabbitmq_channel = rabbitmq_connection.channel()
     rabbitmq_channel.basic_publish(exchange=exchange_name,
                                    routing_key=routing_key,
                                    body=str(message),
-                                   properties=pika.BasicProperties(content_type='application/json'))
+                                   properties=properties)
+
     logger.info('Message successfully sent to rabbitmq', exchange=exchange_name, route=routing_key)
 
     rabbitmq_connection.close()

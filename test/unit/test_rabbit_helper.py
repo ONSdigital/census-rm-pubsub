@@ -9,7 +9,6 @@ from test import create_stub_function
 
 
 class RabbitHelperTestCase(TestCase):
-
     rabbit_username = 'user'
     rabbit_password = 'pa55word'
     rabbit_host = 'host'
@@ -69,8 +68,9 @@ class RabbitHelperTestCase(TestCase):
 
             channel_mock = MagicMock()
             connection_mock.channel = create_stub_function(return_value=channel_mock)
-            mock_pika.BasicProperties = create_stub_function(expected_kwargs={'content_type': 'application/json'},
-                                                             return_value=self.property_class)
+            mock_pika.BasicProperties = \
+                create_stub_function(expected_kwargs={'content_type': 'application/json', 'delivery_mode': 2},
+                                     return_value=self.property_class)
 
             send_message_to_rabbitmq(self.message,
                                      exchange_name=self.rabbit_exchange,
