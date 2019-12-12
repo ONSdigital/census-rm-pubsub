@@ -87,6 +87,10 @@ def offline_receipt_to_case(message: Message):
     log.info('Pub/Sub Message received for processing')
 
     payload = validate_offline_receipt(message.data, log, ['transactionId', 'questionnaireId', 'channel'])
+    try:
+        unreceipt = payload['unreceipt']
+    except KeyError:
+        unreceipt = False
     if not payload:
         return  # Failed validation
 
@@ -106,7 +110,7 @@ def offline_receipt_to_case(message: Message):
         'payload': {
             'response': {
                 'questionnaireId': questionnaire_id,
-                'unreceipt': False
+                'unreceipt': unreceipt
             }
         }
     }
