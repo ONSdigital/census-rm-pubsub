@@ -1,8 +1,13 @@
 FROM python:3.6-slim
 
-WORKDIR /app
-COPY . /app
+RUN pip3 install pipenv
 
-RUN pip3 install pipenv && pipenv install --deploy --system
-
+RUN groupadd --gid 1000 pubsub && useradd --create-home --system --uid 1000 --gid pubsub pubsub
+WORKDIR /home/pubsub
 CMD ["python3", "run.py"]
+
+COPY Pipfile* /home/pubsub/
+RUN pipenv install --deploy --system
+USER pubsub
+
+COPY --chown=pubsub . /home/pubsub
