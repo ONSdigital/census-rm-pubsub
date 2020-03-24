@@ -25,7 +25,7 @@ services:
       - rabbitmq
     restart: always
     healthcheck:
-      test: bash -c "[ -f /app/pubsub-ready ]"
+      test: bash -c "[ -f /home/pubsub/pubsub-ready ]"
       interval: 5s
     environment:
     - RABBIT_HOST=rabbitmq
