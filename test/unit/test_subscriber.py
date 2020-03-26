@@ -209,6 +209,49 @@ class TestSubscriber(TestCase):
         mock_message.ack.assert_called_once()
 
     @patch('app.subscriber.send_message_to_rabbitmq')
+    def test_offline_receipt_to_case_unreceipt(self, mock_send_message_to_rabbit_mq):
+        mock_message = MagicMock()
+        mock_message.data = json.dumps(
+            {"transactionId": "1", "questionnaireId": self.questionnaire_id, "dateTime": self.created_offline_spec,
+             "channel": "PQRS", "unreceipt": True})
+        mock_message.message_id = str(uuid.uuid4())
+
+        expected_log_event = 'Message processing complete'
+        expected_log_kwargs = {
+            'questionnaire_id': self.questionnaire_id,
+            'created': self.parsed_created_offline_spec,
+            'tx_id': '1',
+            'channel': 'PQRS',
+            'subscription_name': self.offline_subscription_name,
+            'subscription_project': self.offline_subscription_project_id,
+            'message_id': mock_message.message_id
+        }
+
+        expected_rabbit_message = json.dumps(
+            {'event': {
+                'type': 'RESPONSE_RECEIVED',
+                'source': 'RECEIPT_SERVICE',
+                'channel': 'PQRS',
+                'dateTime': '2008-08-24T00:00:00+00:00',
+                'transactionId': '1'
+            },
+                'payload': {
+                    'response': {
+                        'questionnaireId': self.questionnaire_id,
+                        'unreceipt': True
+                    }
+                }
+            })
+
+        from app.subscriber import offline_receipt_to_case
+
+        with self.checkExpectedLogLine('INFO', expected_log_event, expected_log_kwargs):
+            offline_receipt_to_case(mock_message)
+
+        mock_send_message_to_rabbit_mq.assert_called_once_with(expected_rabbit_message)
+        mock_message.ack.assert_called_once()
+
+    @patch('app.subscriber.send_message_to_rabbitmq')
     def test_ppo_undelivered_mail_to_case(self, mock_send_message_to_rabbit_mq):
         mock_message = MagicMock()
         mock_message.data = json.dumps(

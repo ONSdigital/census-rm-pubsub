@@ -90,8 +90,6 @@ def offline_receipt_to_case(message: Message):
     if not payload:
         return  # Failed validation
 
-    unreceipt = payload.get('unreceipt', False)
-
     tx_id, questionnaire_id, channel = payload['transactionId'], payload['questionnaireId'], payload['channel']
     time_obj_created = datetime.strptime(payload['dateTime'], '%Y-%m-%dT%H:%M:%S').replace(tzinfo=timezone.utc).isoformat()
 
@@ -108,7 +106,7 @@ def offline_receipt_to_case(message: Message):
         'payload': {
             'response': {
                 'questionnaireId': questionnaire_id,
-                'unreceipt': unreceipt
+                'unreceipt': payload.get('unreceipt', False)
             }
         }
     }
