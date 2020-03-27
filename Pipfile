@@ -5,7 +5,7 @@ name = "pypi"
 
 [packages]
 google-cloud-pubsub = "*"
-grpcio = "*"
+grpcio = "==1.13.0"
 structlog = "*"
 "tonyg-rfc3339" = "*"
 pika = "*"
