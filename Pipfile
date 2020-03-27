@@ -5,7 +5,7 @@ name = "pypi"
 
 [packages]
 google-cloud-pubsub = "*"
-grpcio = "==1.13.0"
+grpcio = "==1.13.0" # TODO: More recent versions of this cause test failures for unknown reasons, needs fixing
 structlog = "*"
 "tonyg-rfc3339" = "*"
 pika = "*"
