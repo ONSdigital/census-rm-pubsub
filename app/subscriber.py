@@ -106,7 +106,7 @@ def offline_receipt_to_case(message: Message):
         'payload': {
             'response': {
                 'questionnaireId': questionnaire_id,
-                'unreceipt': False
+                'unreceipt': payload.get('unreceipt', False)
             }
         }
     }
