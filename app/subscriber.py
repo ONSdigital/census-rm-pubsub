@@ -144,7 +144,7 @@ def ppo_undelivered_mail_to_case(message: Message):
         'payload': {
             'fulfilmentInformation': {
                 'caseRef': case_ref,
-                'productCode': product_code
+                'fulfilmentCode': product_code
             }
         }
     }

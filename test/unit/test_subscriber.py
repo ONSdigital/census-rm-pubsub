@@ -286,7 +286,7 @@ class TestSubscriber(TestCase):
                 'payload': {
                     'fulfilmentInformation': {
                         'caseRef': self.case_ref,
-                        'productCode': self.product_code
+                        'fulfilmentCode': self.product_code
                     }
                 }
             })
