@@ -41,7 +41,7 @@ class CensusRMPubSubComponentTest(TestCase):
         assert actual_result['event']['dateTime'] == '2019-08-03T14:30:01+00:00'
         assert actual_result['event']['transactionId'] == '1'
         assert actual_result['payload']['fulfilmentInformation']['caseRef'] == expected_case_ref
-        assert actual_result['payload']['fulfilmentInformation']['productCode'] == expected_product_code
+        assert actual_result['payload']['fulfilmentInformation']['fulfilmentCode'] == expected_product_code
 
     def test_qm_undelivered_e2e_with_successful_msg(self):
         self.purge_rabbit_queues()
